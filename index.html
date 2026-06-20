@@ -349,7 +349,7 @@
 
     <!-- Header -->
     <header>
-        <img src="logo.png" alt="Freeman Guild" class="logo">
+        <img src="Logo.png" alt="Freeman Guild" class="logo">
         <nav>
             <a href="#about">About</a>
             <a href="#philosophy">Philosophy</a>
@@ -374,7 +374,7 @@
     <!-- About / Vision -->
     <section class="section" id="about">
         <div class="media-embed">
-        <img src="sosticeparty.png" alt="Solstice Party" class="media-embed">
+        <img src="sosticeparty.jpg" alt="Solstice Party" class="media-embed">
         </div>
 
         <h2 class="section-title">Our Vision</h2>
@@ -480,23 +480,35 @@
             });
         });
 
-        // Fade-in animations on scroll
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.transition = 'all 0.8s ease';
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, { threshold: 0.15 });
+        // Fade-in animations on scroll — only hide content if we can reliably reveal it again
+        const animatedEls = document.querySelectorAll('.section-title, .stat, .about-text, .principle');
 
-        // Observe elements for animation
-        document.querySelectorAll('.section-title, .stat, .about-text, .principle').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            observer.observe(el);
-        });
+        const reveal = el => {
+            el.style.transition = 'all 0.8s ease';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        };
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        reveal(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            animatedEls.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                observer.observe(el);
+            });
+
+            // Failsafe: if anything is still hidden shortly after load, force it visible
+            window.setTimeout(() => animatedEls.forEach(reveal), 3000);
+        }
+        // If IntersectionObserver is unsupported, content is simply left visible.
     </script>
 
 </body>
