@@ -343,6 +343,186 @@
                 gap: 50px;
             }
         }
+
+        /* Join Modal */
+        .join-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+        }
+
+        .join-modal-overlay.is-open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .join-modal {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 60px 50px;
+            transform: translateY(16px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .join-modal-overlay.is-open .join-modal {
+            transform: translateY(0);
+        }
+
+        .join-modal-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 24px;
+            font-weight: 200;
+            line-height: 1;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .join-modal-close:hover {
+            color: #fff;
+        }
+
+        .join-modal-eyebrow {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0.5;
+            font-weight: 300;
+            margin-bottom: 16px;
+        }
+
+        .join-modal h2 {
+            font-size: 32px;
+            font-weight: 200;
+            letter-spacing: -0.5px;
+            margin-bottom: 14px;
+        }
+
+        .join-modal-sub {
+            font-size: 14px;
+            font-weight: 300;
+            opacity: 0.6;
+            line-height: 1.7;
+            margin-bottom: 40px;
+        }
+
+        .join-form-field {
+            margin-bottom: 26px;
+        }
+
+        .join-form-field label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.4;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+
+        .join-form-field input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 300;
+            padding: 6px 2px 12px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .join-form-field input::placeholder {
+            color: rgba(224, 224, 224, 0.25);
+        }
+
+        .join-form-field input:focus {
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .join-form-hp {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        .join-submit-btn {
+            width: 100%;
+            margin-top: 16px;
+            padding: 16px 20px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 12px;
+            font-weight: 300;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            cursor: pointer;
+            transition: all 0.4s;
+        }
+
+        .join-submit-btn:hover:not(:disabled) {
+            background: #fff;
+            color: #0a0a0a;
+            border-color: #fff;
+        }
+
+        .join-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .join-error {
+            font-size: 13px;
+            font-weight: 300;
+            opacity: 0.8;
+            margin-top: 18px;
+            color: #e0a0a0;
+        }
+
+        .join-success-icon {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            font-size: 16px;
+            font-weight: 200;
+        }
+
+        @media (max-width: 768px) {
+            .join-modal {
+                padding: 50px 30px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -439,8 +619,8 @@
             
             <div class="footer-section">
                 <h3>Join</h3>
-                <a href="#">Register</a>
-                <a href="#">Collaborate</a>
+                <a href="#" class="js-join-trigger">Register</a>
+                <a href="#" class="js-join-trigger">Collaborate</a>
             </div>
             
             <div class="footer-section">
@@ -454,6 +634,48 @@
             © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.
         </div>
     </footer>
+
+    <!-- Join Modal -->
+    <div id="join-modal-overlay" class="join-modal-overlay" aria-hidden="true">
+        <div class="join-modal" role="dialog" aria-modal="true" aria-labelledby="join-modal-title">
+            <button type="button" class="join-modal-close" aria-label="Close">&times;</button>
+            <div id="join-modal-content">
+                <div class="join-modal-eyebrow">Join</div>
+                <h2 id="join-modal-title">Become Part of the Guild</h2>
+                <p class="join-modal-sub">Leave your details and we'll be in touch.</p>
+
+                <form id="join-form" novalidate>
+                    <div class="join-form-field">
+                        <label for="join-name">Name</label>
+                        <input type="text" id="join-name" name="name" autocomplete="name" required>
+                    </div>
+                    <div class="join-form-field">
+                        <label for="join-email">Email</label>
+                        <input type="email" id="join-email" name="email" autocomplete="email" required>
+                    </div>
+                    <div class="join-form-field">
+                        <label for="join-phone">Phone</label>
+                        <input type="tel" id="join-phone" name="phone" autocomplete="tel" required>
+                    </div>
+                    <div class="join-form-field">
+                        <label for="join-facebook">Facebook Profile</label>
+                        <input type="url" id="join-facebook" name="facebook" placeholder="facebook.com/yourname" autocomplete="url">
+                    </div>
+
+                    <!-- honeypot — leave as-is, real users never see it -->
+                    <div class="join-form-hp" aria-hidden="true">
+                        <label for="join-website">Website</label>
+                        <input type="text" id="join-website" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <button type="submit" class="join-submit-btn">
+                        <span class="btn-text">Request to Join</span>
+                    </button>
+                    <p class="join-error" id="join-error" hidden>Something went wrong. Please try again in a moment.</p>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Header scroll effect
@@ -497,6 +719,121 @@
             el.style.transform = 'translateY(30px)';
             observer.observe(el);
         });
+
+        // Join modal
+        (function () {
+            var GOOGLE_SCRIPT_URL = 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+            var overlay = document.getElementById('join-modal-overlay');
+            var closeBtn = overlay.querySelector('.join-modal-close');
+            var contentEl = document.getElementById('join-modal-content');
+            var originalContentHTML = contentEl.innerHTML;
+            var lastFocusedEl = null;
+
+            function openModal(e) {
+                if (e) e.preventDefault();
+                lastFocusedEl = document.activeElement;
+                overlay.classList.add('is-open');
+                overlay.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                var nameInput = document.getElementById('join-name');
+                if (nameInput) nameInput.focus();
+            }
+
+            function closeModal() {
+                overlay.classList.remove('is-open');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                if (lastFocusedEl) lastFocusedEl.focus();
+                setTimeout(function () {
+                    contentEl.innerHTML = originalContentHTML;
+                    attachFormHandler();
+                }, 400);
+            }
+
+            document.querySelectorAll('.js-join-trigger').forEach(function (el) {
+                el.addEventListener('click', openModal);
+            });
+
+            closeBtn.addEventListener('click', closeModal);
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeModal();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+            });
+
+            function showSuccess(firstName) {
+                var icon = document.createElement('div');
+                icon.className = 'join-success-icon';
+                icon.textContent = '✓';
+
+                var eyebrow = document.createElement('div');
+                eyebrow.className = 'join-modal-eyebrow';
+                eyebrow.textContent = 'Join';
+
+                var heading = document.createElement('h2');
+                heading.textContent = "You're In";
+
+                var sub = document.createElement('p');
+                sub.className = 'join-modal-sub';
+                sub.textContent = (firstName ? 'Thanks, ' + firstName + ' — ' : 'Thanks — ') + "we'll be in touch soon.";
+
+                contentEl.innerHTML = '';
+                contentEl.appendChild(icon);
+                contentEl.appendChild(eyebrow);
+                contentEl.appendChild(heading);
+                contentEl.appendChild(sub);
+
+                setTimeout(closeModal, 2800);
+            }
+
+            function attachFormHandler() {
+                var form = document.getElementById('join-form');
+                var errorMsg = document.getElementById('join-error');
+                if (!form) return;
+
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    var hp = document.getElementById('join-website');
+                    var name = document.getElementById('join-name').value.trim();
+                    var email = document.getElementById('join-email').value.trim();
+                    var phone = document.getElementById('join-phone').value.trim();
+                    var facebook = document.getElementById('join-facebook').value.trim();
+
+                    if (hp && hp.value) {
+                        showSuccess(name.split(' ')[0]);
+                        return;
+                    }
+
+                    if (!name || !email || !phone) return;
+
+                    errorMsg.hidden = true;
+                    var submitBtn = form.querySelector('.join-submit-btn');
+                    var btnText = submitBtn.querySelector('.btn-text');
+                    submitBtn.disabled = true;
+                    btnText.textContent = 'Sending…';
+
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ name: name, email: email, phone: phone, facebook: facebook })
+                    })
+                        .then(function () {
+                            showSuccess(name.split(' ')[0]);
+                        })
+                        .catch(function () {
+                            submitBtn.disabled = false;
+                            btnText.textContent = 'Request to Join';
+                            errorMsg.hidden = false;
+                        });
+                });
+            }
+
+            attachFormHandler();
+        })();
     </script>
 
 </body>
