@@ -497,6 +497,27 @@
             cursor: default;
         }
 
+        .join-disclaimer {
+            margin-top: 20px;
+            font-size: 11px;
+            font-weight: 300;
+            line-height: 1.7;
+            opacity: 0.4;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        .join-disclaimer a {
+            color: #e0e0e0;
+            text-decoration: underline;
+            opacity: 1;
+            transition: opacity 0.2s;
+        }
+
+        .join-disclaimer a:hover {
+            opacity: 0.7;
+        }
+
         .join-error {
             font-size: 13px;
             font-weight: 300;
@@ -620,13 +641,13 @@
             <div class="footer-section">
                 <h3>Join</h3>
                 <a href="#" class="js-join-trigger">Register</a>
-                <!--   <a href="#" class="js-join-trigger">Collaborate</a>   -->
+                <a href="#" class="js-join-trigger">Collaborate</a>
             </div>
             
             <div class="footer-section">
-                <!--    <h3>Legal</h3>
+                <h3>Legal</h3>
                 <a href="#">Privacy</a>
-                <a href="#">Terms</a>    -->
+                <a href="#">Terms</a>
             </div>
         </div>
         
@@ -671,6 +692,9 @@
                     <button type="submit" class="join-submit-btn">
                         <span class="btn-text">Request to Join</span>
                     </button>
+                    <p class="join-disclaimer">
+                        By submitting this form you consent to Freeman Guild collecting and storing your name, email, phone number, and Facebook profile for the purpose of membership communication and event coordination. Your information will not be sold or shared with third parties. You may request removal at any time by contacting us directly.
+                    </p>
                     <p class="join-error" id="join-error" hidden>Something went wrong. Please try again in a moment.</p>
                 </form>
             </div>
