@@ -539,6 +539,27 @@
             font-weight: 200;
         }
 
+        .join-already-btn {
+            display: block;
+            width: 100%;
+            margin-top: 14px;
+            background: none;
+            border: none;
+            color: rgba(224, 224, 224, 0.4);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-align: center;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.3s;
+        }
+
+        .join-already-btn:hover {
+            color: rgba(224, 224, 224, 0.8);
+        }
+
         @media (max-width: 768px) {
             .join-modal {
                 padding: 50px 30px;
@@ -691,6 +712,7 @@
                         By submitting this form you consent to Freeman Guild collecting and storing your name, email, phone number, and Facebook profile for the purpose of membership communication and event coordination. Your information will not be sold or shared with third parties. You may request removal at any time by contacting us directly.
                     </p>
                     <p class="join-error" id="join-error" hidden>Something went wrong. Please try again in a moment.</p>
+                    <button type="button" class="join-already-btn" id="join-already-btn">I'm already registered</button>
                 </form>
             </div>
         </div>
@@ -774,6 +796,21 @@
                 el.addEventListener('click', openModal);
             });
 
+            // Auto-popup: fires once per session after the user has been scrolling for 3 seconds
+            var scrollTimer = null;
+            var autoPopupShown = false;
+
+            window.addEventListener('scroll', function () {
+                if (autoPopupShown) return;
+                if (scrollTimer) return;
+                scrollTimer = setTimeout(function () {
+                    if (!autoPopupShown && !overlay.classList.contains('is-open')) {
+                        autoPopupShown = true;
+                        openModal();
+                    }
+                }, 3000);
+            });
+
             closeBtn.addEventListener('click', closeModal);
             overlay.addEventListener('click', function (e) {
                 if (e.target === overlay) closeModal();
@@ -810,6 +847,12 @@
             function attachFormHandler() {
                 var form = document.getElementById('join-form');
                 var errorMsg = document.getElementById('join-error');
+                var alreadyBtn = document.getElementById('join-already-btn');
+
+                if (alreadyBtn) {
+                    alreadyBtn.addEventListener('click', closeModal);
+                }
+
                 if (!form) return;
 
                 form.addEventListener('submit', function (e) {
