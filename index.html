@@ -122,6 +122,27 @@
             line-height: 1;
             margin-bottom: 40px;
             letter-spacing: -2px;
+            background: 
+                radial-gradient(circle 120px at 20% 50%, rgba(255, 255, 255, 0.9) 0%, rgba(74, 158, 255, 0.6) 45%, transparent 70%),
+                radial-gradient(circle 90px at 70% 50%, rgba(100, 180, 255, 0.7) 0%, rgba(74, 158, 255, 0.4) 50%, transparent 75%),
+                #ffffff;
+            background-size: 150% 100%, 150% 100%, 100% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: spotlights 7s ease-in-out infinite;
+        }
+
+        @keyframes spotlights {
+            0% { 
+                background-position: -50% 0, 150% 0, 0 0;
+            }
+            50% { 
+                background-position: 150% 0, -50% 0, 0 0;
+            }
+            100% { 
+                background-position: -50% 0, 150% 0, 0 0;
+            }
         }
 
         .hero p {
