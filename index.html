@@ -606,9 +606,10 @@
 <body>
 
     <!-- Header -->
-    <header>
+    <header id="home">
         <img src="logo.png" alt="Freeman Guild" class="logo">
         <nav>
+            <a href="#home">Home</a>
             <a href="#about">About</a>
             <a href="#philosophy">Philosophy</a>
             <a href="merch.html">Merch</a>
@@ -639,8 +640,8 @@
         <h2 class="section-title">Our Vision</h2>
         
         <p class="about-text">
-            We believe in the power of intentional creation, curation and above all else, COMMUNITY. The Freeman Guild membership is a collective dedicated to excellence, 
-            authenticity, positive vibes and the pursuit of meaningful events that transcends the ordinary. Long live the underground.
+            We believe in the power of intentional creation. A collective dedicated to excellence, 
+            authenticity, and the pursuit of meaningful work that transcends the ordinary.
         </p>
 
         <div class="stats">
@@ -667,17 +668,17 @@
             <div class="principle">
                 <div class="principle-number">01</div>
                 <div class="principle-title">Intentionality</div>
-                <div class="principle-desc">Every decision guided by purpose and thoughtful consideration of the Freeman community.</div>
+                <div class="principle-desc">Every decision guided by purpose and thoughtful consideration.</div>
             </div>
             <div class="principle">
                 <div class="principle-number">02</div>
                 <div class="principle-title">Authenticity</div>
-                <div class="principle-desc">Truth and freedom in expression without fearing judgement.</div>
+                <div class="principle-desc">Truth in expression and honesty in every creation.</div>
             </div>
             <div class="principle">
                 <div class="principle-number">03</div>
                 <div class="principle-title">Excellence</div>
-                <div class="principle-desc">Unwavering commitment to quality music and atmosphere, with continuous refinement.</div>
+                <div class="principle-desc">Unwavering commitment to quality and continuous refinement.</div>
             </div>
         </div>
     </section>
@@ -833,7 +834,7 @@
                 el.addEventListener('click', openModal);
             });
 
-            // Auto-popup: fires once per session after the user has been scrolling for 30 seconds
+            // Auto-popup: fires once per session after the user has been scrolling for 12 seconds
             var scrollTimer = null;
             var autoPopupShown = false;
 
@@ -845,7 +846,7 @@
                         autoPopupShown = true;
                         openModal();
                     }
-                }, 30000);
+                }, 12000);
             });
 
             closeBtn.addEventListener('click', closeModal);
