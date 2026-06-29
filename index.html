@@ -833,7 +833,7 @@
                 el.addEventListener('click', openModal);
             });
 
-            // Auto-popup: fires once per session after the user has been scrolling for 12 seconds
+            // Auto-popup: fires once per session after the user has been scrolling for 30 seconds
             var scrollTimer = null;
             var autoPopupShown = false;
 
@@ -845,7 +845,7 @@
                         autoPopupShown = true;
                         openModal();
                     }
-                }, 12000);
+                }, 30000);
             });
 
             closeBtn.addEventListener('click', closeModal);
