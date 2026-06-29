@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freeman Guild Merch</title>
+    <meta name="description" content="Freeman Guild official merchandise — Premium t-shirts featuring the iconic Freeman Guild logo.">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 30px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        header.scrolled {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px 60px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            height: 70px;
+            width: auto;
+            opacity: 0.95;
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        nav {
+            display: flex;
+            gap: 50px;
+        }
+
+        nav a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #fff;
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 80px;
+        }
+
+        .hero-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+        }
+
+        .line {
+            position: absolute;
+            background: #fff;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .line-1 { width: 1px; height: 100%; left: 20%; }
+        .line-2 { width: 1px; height: 100%; left: 50%; animation-delay: 2s; }
+        .line-3 { width: 1px; height: 100%; left: 80%; animation-delay: 4s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); opacity: 0.03; }
+            50% { transform: translateY(-20px); opacity: 0.06; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 800px;
+            padding: 0 30px;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(40px, 8vw, 80px);
+            font-weight: 200;
+            line-height: 1.1;
+            margin-bottom: 30px;
+            letter-spacing: -1px;
+        }
+
+        .hero-content p {
+            font-size: 16px;
+            font-weight: 300;
+            opacity: 0.6;
+            letter-spacing: 1px;
+        }
+
+        /* Merch Section */
+        .merch-section {
+            padding: 150px 60px;
+            position: relative;
+        }
+
+        .merch-intro {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 120px;
+        }
+
+        .merch-intro p {
+            font-size: 16px;
+            font-weight: 300;
+            opacity: 0.6;
+            line-height: 1.8;
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 80px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Product Image Container */
+        .product-image {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            margin-bottom: 40px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: block;
+            text-decoration: none;
+        }
+
+        .product-card:hover .product-image {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .product-image img,
+        .product-image svg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-card:hover .product-image img,
+        .product-card:hover .product-image svg {
+            transform: scale(1.05);
+        }
+
+        /* Product Info */
+        .product-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .product-name:hover {
+            opacity: 0.7;
+        }
+
+        .product-color {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.5;
+            margin-bottom: 10px;
+        }
+
+        /* Color Swatches */
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .color-black { background: #1a1a1a; }
+        .color-navy { background: #1a2540; }
+        .color-olive { background: #3d4a2e; }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 80px 60px 40px;
+            margin-top: 100px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 100px;
+            max-width: 1200px;
+            margin: 0 auto 60px;
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .footer-section h3 {
+            font-size: 14px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .footer-section p {
+            font-size: 14px;
+            line-height: 1.8;
+            opacity: 0.5;
+        }
+
+        .footer-section a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 300;
+            transition: all 0.3s;
+            width: fit-content;
+        }
+
+        .footer-section a:hover {
+            opacity: 0.6;
+        }
+
+        .copyright {
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.3;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 20px 30px;
+            }
+            header.scrolled {
+                padding: 18px 30px;
+            }
+            nav {
+                gap: 25px;
+            }
+            nav a {
+                font-size: 12px;
+            }
+            .hero {
+                height: 50vh;
+                margin-top: 70px;
+            }
+            .merch-section {
+                padding: 100px 30px;
+            }
+            .product-grid {
+                gap: 60px;
+            }
+            .merch-intro {
+                margin-bottom: 80px;
+            }
+            footer {
+                padding: 60px 30px 30px;
+            }
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 16px 20px;
+            }
+            header.scrolled {
+                padding: 14px 20px;
+            }
+            .logo {
+                height: 50px;
+            }
+            nav {
+                gap: 16px;
+            }
+            nav a {
+                font-size: 11px;
+                letter-spacing: 1px;
+            }
+            .hero {
+                height: 40vh;
+                margin-top: 60px;
+            }
+            .hero-content h1 {
+                font-size: clamp(32px, 7vw, 50px);
+                margin-bottom: 20px;
+            }
+            .hero-content p {
+                font-size: 14px;
+            }
+            .merch-section {
+                padding: 80px 20px;
+            }
+            .merch-intro {
+                margin-bottom: 60px;
+            }
+            .merch-intro p {
+                font-size: 14px;
+            }
+            .product-grid {
+                grid-template-columns: 1fr;
+                gap: 50px;
+            }
+            .product-image {
+                margin-bottom: 30px;
+            }
+            .product-name {
+                font-size: 16px;
+            }
+            footer {
+                padding: 60px 20px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="logo.png" alt="Freeman Guild" class="logo">
+        </a>
+        <nav>
+            <a href="index.html#about">About</a>
+            <a href="index.html#philosophy">Philosophy</a>
+            <a href="merch.html">Merch</a>
+            <a href="index.html#contact">Contact</a>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-lines">
+            <div class="line line-1"></div>
+            <div class="line line-2"></div>
+            <div class="line line-3"></div>
+        </div>
+        <div class="hero-content">
+            <h1>OFFICIAL MERCH</h1>
+            <p>PREMIUM APPAREL FOR THE COLLECTIVE</p>
+        </div>
+    </section>
+
+    <!-- Merch Section -->
+    <section class="merch-section">
+        <div class="merch-intro">
+            <p>
+                Wear your commitment to excellence. Our signature Freeman Guild t-shirt features the iconic logo, 
+                crafted from premium materials for comfort and durability. Available in three timeless colorways.
+            </p>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="product-grid">
+            <!-- Black Tee -->
+            <div class="product-card">
+                <a href="https://www.amazon.com/dp/B0H6SZ2SGN?customId=B0752XJYNL&customizationToken=MC_Assembly_1%23B0752XJYNL&th=1&psc=1" target="_blank" class="product-image">
+                    <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                        <!-- Shirt base -->
+                        <rect width="400" height="500" fill="#1a1a1a"/>
+                        
+                        <!-- Neckline -->
+                        <ellipse cx="200" cy="60" rx="45" ry="35" fill="#0a0a0a"/>
+                        
+                        <!-- Sleeves -->
+                        <path d="M 80 80 Q 40 100 30 180 L 80 150 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+                        <path d="M 320 80 Q 360 100 370 180 L 320 150 Z" fill="#1a1a1a" stroke="#2a2a2a" stroke-width="1"/>
+                        
+                        <!-- Logo/Text Area -->
+                        <text x="200" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="2">
+                            FREEMAN
+                        </text>
+                        <text x="200" y="340" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="2">
+                            GUILD
+                        </text>
+                        
+                        <!-- Decorative dots -->
+                        <circle cx="90" cy="250" r="4" fill="white"/>
+                        <circle cx="105" cy="245" r="3.5" fill="white"/>
+                        <circle cx="118" cy="255" r="3" fill="white"/>
+                        <circle cx="130" cy="250" r="3.5" fill="white"/>
+                    </svg>
+                </a>
+                <div class="product-info">
+                    <a href="https://www.amazon.com/dp/B0H6SZ2SGN?customId=B0752XJYNL&customizationToken=MC_Assembly_1%23B0752XJYNL&th=1&psc=1" target="_blank" class="product-name">Classic Black</a>
+                    <div class="product-color">
+                        Premium Cotton
+                        <span class="color-swatch color-black"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navy Tee -->
+            <div class="product-card">
+                <a href="https://www.amazon.com/dp/B0H6SZ2SGN?customId=B07537HQXD&customizationToken=MC_Assembly_1%23B07537HQXD&th=1&psc=1" target="_blank" class="product-image">
+                    <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                        <!-- Shirt base -->
+                        <rect width="400" height="500" fill="#1a2540"/>
+                        
+                        <!-- Neckline -->
+                        <ellipse cx="200" cy="60" rx="45" ry="35" fill="#0f1830"/>
+                        
+                        <!-- Sleeves -->
+                        <path d="M 80 80 Q 40 100 30 180 L 80 150 Z" fill="#1a2540" stroke="#2a3555" stroke-width="1"/>
+                        <path d="M 320 80 Q 360 100 370 180 L 320 150 Z" fill="#1a2540" stroke="#2a3555" stroke-width="1"/>
+                        
+                        <!-- Logo/Text Area -->
+                        <text x="200" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="2">
+                            FREEMAN
+                        </text>
+                        <text x="200" y="340" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="2">
+                            GUILD
+                        </text>
+                        
+                        <!-- Decorative dots -->
+                        <circle cx="90" cy="250" r="4" fill="white"/>
+                        <circle cx="105" cy="245" r="3.5" fill="white"/>
+                        <circle cx="118" cy="255" r="3" fill="white"/>
+                        <circle cx="130" cy="250" r="3.5" fill="white"/>
+                    </svg>
+                </a>
+                <div class="product-info">
+                    <a href="https://www.amazon.com/dp/B0H6SZ2SGN?customId=B07537HQXD&customizationToken=MC_Assembly_1%23B07537HQXD&th=1&psc=1" target="_blank" class="product-name">Midnight Navy</a>
+                    <div class="product-color">
+                        Premium Cotton
+                        <span class="color-swatch color-navy"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Olive Tee -->
+            <div class="product-card">
+                <a href="https://www.amazon.com/dp/B0H6SZ2SGN?customId=B07535YCL2&customizationToken=MC_Assembly_1%23B07535YCL2&th=1&psc=1" target="_blank" class="product-image">
+                    <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+                        <!-- Shirt base -->
+                        <rect width="400" height="500" fill="#3d4a2e"/>
+                        
+                        <!-- Neckline -->
+                        <ellipse cx="200" cy="60" rx="45" ry="35" fill="#282f1f"/>
+                        
+                        <!-- Sleeves -->
+                        <path d="M 80 80 Q 40 100 30 180 L 80 150 Z" fill="#3d4a2e" stroke="#4a5738" stroke-width="1"/>
+                        <path d="M 320 80 Q 360 100 370 180 L 320 150 Z" fill="#3d4a2e" stroke="#4a5738" stroke-width="1"/>
+                        
+                        <!-- Logo/Text Area -->
+                        <text x="200" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="2">
+                            FREEMAN
+                        </text>
+                        <text x="200" y="340" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" letter-spacing="2">
+                            GUILD
+                        </text>
+                        
+                        <!-- Decorative dots -->
+                        <circle cx="90" cy="250" r="4" fill="white"/>
+                        <circle cx="105" cy="245" r="3.5" fill="white"/>
+                        <circle cx="118" cy="255" r="3" fill="white"/>
+                        <circle cx="130" cy="250" r="3.5" fill="white"/>
+                    </svg>
+                </a>
+                <div class="product-info">
+                    <a href="https://www.amazon.com/dp/B0H6SZ2SGN?customId=B07535YCL2&customizationToken=MC_Assembly_1%23B07535YCL2&th=1&psc=1" target="_blank" class="product-name">Forest Olive</a>
+                    <div class="product-color">
+                        Premium Cotton
+                        <span class="color-swatch color-olive"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Freeman Guild</h3>
+                <p>A collective of creators, thinkers, and builders dedicated to meaningful work and conscious collaboration.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Site</h3>
+                <a href="index.html">Home</a>
+                <a href="index.html#about">About</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        const header = document.querySelector('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 80) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+
+</body>
+</html>
