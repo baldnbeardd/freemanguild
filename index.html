@@ -357,7 +357,10 @@
                 padding: 18px 30px;
             }
             nav {
-                gap: 30px;
+                gap: 25px;
+            }
+            nav a {
+                font-size: 12px;
             }
             .section {
                 padding: 100px 30px;
@@ -368,6 +371,28 @@
             }
             .stats {
                 gap: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 16px 20px;
+            }
+            header.scrolled {
+                padding: 14px 20px;
+            }
+            .logo {
+                height: 50px;
+            }
+            nav {
+                gap: 16px;
+            }
+            nav a {
+                font-size: 11px;
+                letter-spacing: 1px;
+            }
+            .section {
+                padding: 80px 20px;
             }
         }
 
@@ -590,6 +615,19 @@
         @media (max-width: 768px) {
             .join-modal {
                 padding: 50px 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .join-modal {
+                padding: 40px 20px;
+            }
+            .join-modal h2 {
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
+            .join-form-field {
+                margin-bottom: 20px;
             }
         }
     </style>
@@ -823,7 +861,7 @@
                 el.addEventListener('click', openModal);
             });
 
-            // Auto-popup: fires once per session after the user has been scrolling for 3 seconds
+            // Auto-popup: fires once per session after the user has been scrolling for 12 seconds
             var scrollTimer = null;
             var autoPopupShown = false;
 
@@ -835,7 +873,7 @@
                         autoPopupShown = true;
                         openModal();
                     }
-                }, 3000);
+                }, 12000);
             });
 
             closeBtn.addEventListener('click', closeModal);
