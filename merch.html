@@ -128,7 +128,7 @@
             font-size: clamp(40px, 8vw, 80px);
             font-weight: 200;
             line-height: 1.1;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             letter-spacing: -1px;
         }
 
@@ -318,35 +318,64 @@
             header.scrolled {
                 padding: 18px 30px;
             }
+            .logo {
+                height: 60px;
+            }
             nav {
-                gap: 25px;
+                gap: 20px;
             }
             nav a {
-                font-size: 12px;
+                font-size: 11px;
+                letter-spacing: 1px;
             }
             .hero {
                 height: 50vh;
                 margin-top: 70px;
             }
-            .merch-section {
-                padding: 100px 30px;
+            .hero-content h1 {
+                font-size: clamp(32px, 7vw, 60px);
+                margin-bottom: 12px;
             }
-            .product-grid {
-                gap: 60px;
+            .hero-content p {
+                font-size: 14px;
+            }
+            .merch-section {
+                padding: 80px 30px;
             }
             .merch-intro {
-                margin-bottom: 80px;
+                margin-bottom: 70px;
+            }
+            .merch-intro p {
+                font-size: 14px;
+            }
+            .product-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 50px;
+            }
+            .product-image {
+                margin-bottom: 25px;
+            }
+            .product-name {
+                font-size: 16px;
+            }
+            .product-color {
+                font-size: 11px;
+            }
+            .color-swatch {
+                width: 18px;
+                height: 18px;
             }
             footer {
                 padding: 60px 30px 30px;
+                margin-top: 80px;
             }
             .footer-content {
                 grid-template-columns: 1fr;
-                gap: 50px;
+                gap: 40px;
             }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
             header {
                 padding: 16px 20px;
             }
@@ -357,44 +386,197 @@
                 height: 50px;
             }
             nav {
-                gap: 16px;
+                gap: 14px;
             }
             nav a {
-                font-size: 11px;
-                letter-spacing: 1px;
+                font-size: 10px;
+                letter-spacing: 0.5px;
             }
             .hero {
-                height: 40vh;
+                height: 45vh;
                 margin-top: 60px;
             }
             .hero-content h1 {
-                font-size: clamp(32px, 7vw, 50px);
-                margin-bottom: 20px;
+                font-size: clamp(28px, 7vw, 48px);
+                margin-bottom: 10px;
             }
             .hero-content p {
-                font-size: 14px;
+                font-size: 13px;
             }
             .merch-section {
-                padding: 80px 20px;
+                padding: 70px 20px;
             }
             .merch-intro {
                 margin-bottom: 60px;
             }
             .merch-intro p {
-                font-size: 14px;
+                font-size: 13px;
+                line-height: 1.6;
             }
             .product-grid {
                 grid-template-columns: 1fr;
-                gap: 50px;
+                gap: 45px;
             }
             .product-image {
-                margin-bottom: 30px;
+                margin-bottom: 20px;
             }
             .product-name {
-                font-size: 16px;
+                font-size: 15px;
+                margin-bottom: 12px;
+            }
+            .product-color {
+                font-size: 10px;
+            }
+            .color-swatch {
+                width: 16px;
+                height: 16px;
             }
             footer {
-                padding: 60px 20px 30px;
+                padding: 50px 20px 25px;
+                margin-top: 60px;
+            }
+            .footer-content {
+                gap: 35px;
+            }
+            .footer-section h3 {
+                font-size: 12px;
+            }
+            .footer-section p {
+                font-size: 13px;
+            }
+            .footer-section a {
+                font-size: 13px;
+            }
+            .copyright {
+                font-size: 10px;
+                padding-top: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 14px 16px;
+            }
+            header.scrolled {
+                padding: 12px 16px;
+            }
+            .logo {
+                height: 45px;
+            }
+            nav {
+                gap: 12px;
+            }
+            nav a {
+                font-size: 9px;
+                letter-spacing: 0.5px;
+            }
+            .hero {
+                height: 40vh;
+                margin-top: 55px;
+            }
+            .hero-content h1 {
+                font-size: clamp(24px, 6vw, 42px);
+                margin-bottom: 8px;
+            }
+            .hero-content p {
+                font-size: 12px;
+            }
+            .merch-section {
+                padding: 60px 16px;
+            }
+            .merch-intro {
+                margin-bottom: 50px;
+            }
+            .merch-intro p {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+            .product-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .product-image {
+                margin-bottom: 18px;
+            }
+            .product-name {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            .product-color {
+                font-size: 9px;
+            }
+            .color-swatch {
+                width: 15px;
+                height: 15px;
+            }
+            footer {
+                padding: 45px 16px 20px;
+                margin-top: 50px;
+            }
+            .footer-content {
+                gap: 30px;
+            }
+            .footer-section h3 {
+                font-size: 11px;
+            }
+            .footer-section p {
+                font-size: 12px;
+                line-height: 1.6;
+            }
+            .footer-section a {
+                font-size: 12px;
+            }
+            .copyright {
+                font-size: 9px;
+                padding-top: 25px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            header {
+                padding: 12px 14px;
+            }
+            .logo {
+                height: 42px;
+            }
+            nav {
+                gap: 10px;
+            }
+            nav a {
+                font-size: 8px;
+            }
+            .hero {
+                height: 35vh;
+                margin-top: 50px;
+            }
+            .hero-content h1 {
+                font-size: clamp(20px, 5vw, 36px);
+                margin-bottom: 6px;
+            }
+            .hero-content p {
+                font-size: 11px;
+            }
+            .merch-section {
+                padding: 50px 14px;
+            }
+            .merch-intro {
+                margin-bottom: 40px;
+            }
+            .merch-intro p {
+                font-size: 11px;
+            }
+            .product-grid {
+                gap: 35px;
+            }
+            .product-image {
+                margin-bottom: 15px;
+            }
+            .product-name {
+                font-size: 13px;
+            }
+            footer {
+                padding: 40px 14px 18px;
+                margin-top: 40px;
             }
         }
     </style>
@@ -431,8 +613,7 @@
     <section class="merch-section">
         <div class="merch-intro">
             <p>
-                Wear your commitment to excellence. Our signature Freeman Guild t-shirt features the iconic logo, 
-                crafted from premium materials for comfort and durability. Available in three timeless colorways.
+                Our signature Freeman Guild tee features the Freeman logo, crafted from premium materials for comfort and durability. Available in three timeless colors.
             </p>
         </div>
 
