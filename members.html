@@ -226,6 +226,47 @@
     margin-bottom: 24px;
   }
 
+  .avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 4px 0 28px;
+  }
+  .avatar-frame {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid #da3633; /* default red; JS sets to green when membership is active */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #151515;
+    cursor: pointer;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .avatar-placeholder {
+    font-size: 32px;
+    font-weight: 200;
+    color: var(--muted);
+  }
+  .avatar-label {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 2px;
+  }
+  .avatar-label:hover { color: var(--fg); border-color: var(--fg); }
+
   .hidden { display: none; }
   .loading { text-align: center; color: var(--muted); padding: 60px 0; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; }
 </style>
@@ -280,6 +321,15 @@
     <div class="membership-badge" id="membershipBadge">Membership: Inactive</div>
 
     <div id="saveStatus" class="status-msg"></div>
+
+    <div class="avatar-section">
+      <div class="avatar-frame" id="avatarFrame" title="Click to upload a profile photo">
+        <img id="avatarPreview" class="avatar-img hidden" alt="Profile photo">
+        <div id="avatarPlaceholderIcon" class="avatar-placeholder">+</div>
+      </div>
+      <label for="avatarInput" class="avatar-label">Change Photo</label>
+      <input type="file" id="avatarInput" accept="image/*" class="hidden">
+    </div>
 
     <div class="section-title">Contact Info</div>
 
@@ -451,9 +501,103 @@ window.__freemanMembersInit = true;
     const badge = document.getElementById('membershipBadge');
     badge.textContent = 'Membership: ' + (profile.membership_status || 'inactive').toUpperCase();
 
+    applyAvatar(profile.avatar_url, profile.membership_status);
+
     document.getElementById('unsubscribeBtn').textContent =
       profile.unsubscribed ? 'Resubscribe to Communications' : 'Unsubscribe from Communications';
   }
+
+  function applyAvatar(avatarUrl, membershipStatus) {
+    const frame = document.getElementById('avatarFrame');
+    const img = document.getElementById('avatarPreview');
+    const placeholder = document.getElementById('avatarPlaceholderIcon');
+
+    frame.style.borderColor = membershipStatus === 'active' ? '#2ea043' : '#da3633';
+
+    if (avatarUrl) {
+      img.src = avatarUrl;
+      img.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+    } else {
+      img.classList.add('hidden');
+      placeholder.classList.remove('hidden');
+    }
+  }
+
+  // Resize an image file down to at most maxSize x maxSize (preserving aspect ratio)
+  function resizeImageFile(file, maxSize) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read the selected file.'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('That file could not be read as an image.'));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxSize || height > maxSize) {
+            if (width > height) {
+              height = Math.round(height * (maxSize / width));
+              width = maxSize;
+            } else {
+              width = Math.round(width * (maxSize / height));
+              height = maxSize;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => blob ? resolve(blob) : reject(new Error('Could not process image.')),
+            'image/jpeg',
+            0.85
+          );
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('avatarFrame').addEventListener('click', () => {
+    document.getElementById('avatarInput').click();
+  });
+
+  document.getElementById('avatarInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    try {
+      showStatus(saveStatus, 'Uploading photo…');
+      const blob = await resizeImageFile(file, 200);
+      const path = session.user.id + '/avatar.jpg';
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      const avatarUrl = urlData.publicUrl + '?t=' + Date.now(); // cache-bust so the new photo shows immediately
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', session.user.id);
+      if (updateError) throw updateError;
+
+      const { data: profile } = await supabase.from('profiles').select('membership_status').eq('id', session.user.id).single();
+      applyAvatar(avatarUrl, profile ? profile.membership_status : null);
+      showStatus(saveStatus, 'Photo updated.');
+    } catch (err) {
+      showStatus(saveStatus, err.message, true);
+    } finally {
+      e.target.value = '';
+    }
+  });
 
   document.getElementById('saveBtn').addEventListener('click', async () => {
     const { data: { session } } = await supabase.auth.getSession();
