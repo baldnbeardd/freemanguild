@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Freeman Guild</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="document.getElementById('loadingView').innerHTML='Failed to load required library. Please refresh, or check your connection.'"></script>
+<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --fg: #f2f2f2;
+    --muted: #8a8a8a;
+    --line: #2a2a2a;
+    --accent: #4a9eff;
+    --green: #2ea043;
+    --red: #da3633;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 30px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  header.scrolled {
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 20px 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .logo { height: 70px; width: auto; opacity: 0.95; }
+  header nav { display: flex; gap: 50px; }
+  header nav a {
+    color: #e0e0e0;
+    font-size: 13px;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  header nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #fff;
+    transition: width 0.3s;
+  }
+  header nav a:hover::after { width: 100%; }
+
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 30px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1100;
+  }
+  .hamburger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: #e0e0e0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  @media (max-width: 768px) {
+    header { padding: 20px 30px; }
+    header.scrolled { padding: 18px 30px; }
+    .hamburger { display: flex; }
+    header nav {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      height: 100vh;
+      width: min(75vw, 320px);
+      background: rgba(10, 10, 10, 0.98);
+      backdrop-filter: blur(20px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 36px;
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    header nav.open { right: 0; }
+    header nav a { font-size: 15px; }
+  }
+  @media (max-width: 480px) {
+    header { padding: 16px 20px; }
+    header.scrolled { padding: 14px 20px; }
+    .logo { height: 50px; }
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 160px 24px 100px;
+  }
+
+  h1 {
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 22px;
+    font-weight: 300;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .section-title {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 12px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin: 48px 0 24px;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .loading, .denied {
+    text-align: center;
+    color: var(--muted);
+    padding: 100px 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+  .denied a {
+    display: inline-block;
+    margin-top: 20px;
+    border-bottom: 1px solid var(--fg);
+    color: var(--fg);
+    letter-spacing: 1px;
+    text-transform: none;
+    font-size: 13px;
+  }
+
+  /* Auth view (reused pattern) */
+  .authWrap { max-width: 420px; margin: 0 auto; }
+  .label {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 11px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+  input[type=email], input[type=password] {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  input:focus { outline: none; border-color: var(--fg); }
+  button {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--fg);
+    color: var(--fg);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 12px;
+    padding: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, color 0.2s;
+    margin-bottom: 12px;
+  }
+  button:hover { background: var(--fg); color: var(--bg); }
+  .divider {
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 28px 0;
+  }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .divider::before { margin-right: 12px; }
+  .divider::after { margin-left: 12px; }
+
+  /* Stat cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    border: 1px solid var(--line);
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-number {
+    font-size: 32px;
+    font-weight: 200;
+  }
+  .stat-label {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  @media (max-width: 700px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Charts */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 24px;
+  }
+  .chart-card {
+    border: 1px solid var(--line);
+    padding: 20px;
+  }
+  .chart-card canvas { max-height: 260px; }
+  .chart-card.full { grid-column: 1 / -1; }
+  @media (max-width: 900px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Member table */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; min-width: 760px; }
+  th, td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  th {
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.email { color: var(--fg); }
+  td.muted { color: var(--muted); }
+  td a { color: var(--accent); border-bottom: 1px solid transparent; }
+  td a:hover { border-bottom-color: var(--accent); }
+
+  .tag-checks { display: flex; gap: 12px; flex-wrap: wrap; }
+  .tag-checks label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .tag-checks input { margin: 0; }
+
+  select.status-select {
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  select.status-select.active { border-color: var(--green); color: var(--green); }
+  select.status-select.inactive { border-color: var(--red); color: var(--red); }
+  select.status-select.pending { border-color: var(--accent); color: var(--accent); }
+
+  .table-status-msg {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--green);
+    min-height: 16px;
+    margin: 12px 0;
+  }
+  .table-status-msg.error { color: #ff5a5a; }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <a href="index.html" class="logo-link">
+    <img src="logo.png" alt="Freeman Guild" class="logo">
+  </a>
+  <nav id="mainNav">
+    <a href="index.html">Home</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#philosophy">Philosophy</a>
+    <a href="merch.html">Merch</a>
+    <a href="members.html">Members</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main>
+
+  <div id="loadingView" class="loading">Loading…</div>
+
+  <!-- ===================== LOGGED OUT VIEW ===================== -->
+  <div id="authView" class="hidden authWrap">
+    <h1>Admin Login</h1>
+    <button class="btn-google" id="googleBtn">Continue with Google</button>
+    <div class="divider">or</div>
+    <div id="statusMsg" class="table-status-msg"></div>
+    <label class="label" for="authEmail">Email</label>
+    <input type="email" id="authEmail" placeholder="you@example.com">
+    <label class="label" for="authPassword">Password</label>
+    <input type="password" id="authPassword" placeholder="••••••••">
+    <button id="signInBtn">Sign In</button>
+  </div>
+
+  <!-- ===================== NOT AN ADMIN ===================== -->
+  <div id="deniedView" class="hidden denied">
+    This page is restricted to administrators.
+    <br>
+    <a href="members.html">Go to Member Dashboard</a>
+  </div>
+
+  <!-- ===================== ADMIN DASHBOARD ===================== -->
+  <div id="dashboardView" class="hidden">
+    <h1>Admin Dashboard</h1>
+
+    <div class="section-title">Overview</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-number" id="statTotal">—</div><div class="stat-label">Total Members</div></div>
+      <div class="stat-card"><div class="stat-number" id="statActive">—</div><div class="stat-label">Active</div></div>
+      <div class="stat-card"><div class="stat-number" id="statFounders">—</div><div class="stat-label">Founders</div></div>
+      <div class="stat-card"><div class="stat-number" id="statAdmins">—</div><div class="stat-label">Admins</div></div>
+    </div>
+
+    <div class="section-title">Usage Metrics</div>
+    <div class="charts-grid">
+      <div class="chart-card"><canvas id="signupsChart"></canvas></div>
+      <div class="chart-card"><canvas id="statusChart"></canvas></div>
+      <div class="chart-card full"><canvas id="genresChart"></canvas></div>
+    </div>
+
+    <div class="section-title">Members</div>
+    <div id="tableStatus" class="table-status-msg"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Facebook</th>
+            <th>Joined</th>
+            <th>Membership</th>
+            <th>Tags</th>
+          </tr>
+        </thead>
+        <tbody id="memberRows"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+if (window.__freemanAdminInit) {
+  console.warn('Admin script already initialized — skipping duplicate run.');
+} else {
+window.__freemanAdminInit = true;
+(function() {
+  const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
+
+  if (!window.supabase) {
+    document.getElementById('loadingView').innerHTML =
+      'Could not load required library. Please refresh the page.';
+    throw new Error('supabase-js failed to load from CDN');
+  }
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const ALL_TAGS = ['member', 'founder', 'admin'];
+
+  const loadingView = document.getElementById('loadingView');
+  const authView = document.getElementById('authView');
+  const deniedView = document.getElementById('deniedView');
+  const dashboardView = document.getElementById('dashboardView');
+  const statusMsg = document.getElementById('statusMsg');
+  const tableStatus = document.getElementById('tableStatus');
+
+  function showStatus(el, text, isError = false) {
+    el.textContent = text;
+    el.className = 'table-status-msg' + (isError ? ' error' : '');
+    if (text) setTimeout(() => { el.textContent = ''; el.className = 'table-status-msg'; }, 3000);
+  }
+
+  async function init() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      loadingView.classList.add('hidden');
+      if (session) {
+        await checkAdminAndLoad(session.user);
+      } else {
+        authView.classList.remove('hidden');
+      }
+    } catch (err) {
+      loadingView.textContent = 'Something went wrong: ' + err.message;
+      console.error('Admin init failed:', err);
+    }
+  }
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      authView.classList.add('hidden');
+      checkAdminAndLoad(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      dashboardView.classList.add('hidden');
+      deniedView.classList.add('hidden');
+      authView.classList.remove('hidden');
+    }
+  });
+
+  document.getElementById('googleBtn').addEventListener('click', async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href }
+    });
+  });
+
+  document.getElementById('signInBtn').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    if (!email || !password) {
+      showStatus(statusMsg, 'Enter both email and password.', true);
+      return;
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) showStatus(statusMsg, error.message, true);
+  });
+
+  async function checkAdminAndLoad(user) {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('tags')
+      .eq('id', user.id)
+      .single();
+
+    if (error || !profile || !(profile.tags || []).includes('admin')) {
+      deniedView.classList.remove('hidden');
+      return;
+    }
+
+    dashboardView.classList.remove('hidden');
+    await loadDashboard();
+  }
+
+  let allMembers = [];
+  let charts = {};
+
+  async function loadDashboard() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, email, facebook, created_at, membership_status, tags, genres')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      tableStatus.textContent = 'Could not load members: ' + error.message;
+      tableStatus.classList.add('error');
+      return;
+    }
+
+    allMembers = data || [];
+    renderStats();
+    renderCharts();
+    renderTable();
+  }
+
+  function renderStats() {
+    const total = allMembers.length;
+    const active = allMembers.filter(m => m.membership_status === 'active').length;
+    const founders = allMembers.filter(m => (m.tags || []).includes('founder')).length;
+    const admins = allMembers.filter(m => (m.tags || []).includes('admin')).length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statFounders').textContent = founders;
+    document.getElementById('statAdmins').textContent = admins;
+  }
+
+  function renderCharts() {
+    const gridColor = 'rgba(255,255,255,0.08)';
+    const textColor = '#8a8a8a';
+    Chart.defaults.color = textColor;
+    Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+    // --- Signups over time (by month) ---
+    const monthCounts = {};
+    allMembers.forEach(m => {
+      const d = new Date(m.created_at);
+      const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+      monthCounts[key] = (monthCounts[key] || 0) + 1;
+    });
+    const monthLabels = Object.keys(monthCounts);
+    const monthData = Object.values(monthCounts);
+
+    if (charts.signups) charts.signups.destroy();
+    charts.signups = new Chart(document.getElementById('signupsChart'), {
+      type: 'line',
+      data: {
+        labels: monthLabels,
+        datasets: [{
+          label: 'New Members',
+          data: monthData,
+          borderColor: '#4a9eff',
+          backgroundColor: 'rgba(74,158,255,0.15)',
+          tension: 0.3,
+          fill: true,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, title: { display: true, text: 'Signups Over Time', color: '#f2f2f2', font: { size: 12 } } },
+        scales: {
+          x: { grid: { color: gridColor } },
+          y: { grid: { color: gridColor }, beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+
+    // --- Membership status breakdown ---
+    const statusCounts = { active: 0, pending: 0, inactive: 0 };
+    allMembers.forEach(m => {
+      const s = m.membership_status || 'inactive';
+      statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+
+    if (charts.status) charts.status.destroy();
+    charts.status = new Chart(document.getElementById('statusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Active', 'Pending', 'Inactive'],
+        datasets: [{
+          data: [statusCounts.active, statusCounts.pending, statusCounts.inactive],
+          backgroundColor: ['#2ea043', '#4a9eff', '#da3633'],
+          borderColor: '#0a0a0a',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Membership Status', color: '#f2f2f2', font: { size: 12 } } }
+      }
+    });
+
+    // --- Genre popularity ---
+    const genreCounts = {};
+    allMembers.forEach(m => (m.genres || []).forEach(g => { genreCounts[g] = (genreCounts[g] || 0) + 1; }));
+    const genreLabels = Object.keys(genreCounts);
+    const genreData = Object.values(genreCounts);
+
+    if (charts.genres) charts.genres.destroy();
+    charts.genres = new Chart(document.getElementById('genresChart'), {
+      type: 'bar',
+      data: {
+        labels: genreLabels,
+        datasets: [{
+          label: 'Members',
+          data: genreData,
+          backgroundColor: '#4a9eff'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, title: { display: true, text: 'Favorite Genres', color: '#f2f2f2', font: { size: 12 } } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: gridColor }, beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('memberRows');
+    tbody.innerHTML = '';
+
+    allMembers.forEach(m => {
+      const tr = document.createElement('tr');
+
+      const tagChecks = ALL_TAGS.map(tag => {
+        const checked = (m.tags || []).includes(tag) ? 'checked' : '';
+        return `<label><input type="checkbox" data-id="${m.id}" data-tag="${tag}" ${checked}> ${tag}</label>`;
+      }).join('');
+
+      const status = m.membership_status || 'inactive';
+      const facebookCell = m.facebook
+        ? `<a href="${m.facebook.startsWith('http') ? m.facebook : 'https://' + m.facebook}" target="_blank" rel="noopener">${m.facebook}</a>`
+        : '<span class="muted">—</span>';
+
+      tr.innerHTML = `
+        <td>${m.name || '<span class="muted">—</span>'}</td>
+        <td class="email">${m.email || '—'}</td>
+        <td>${facebookCell}</td>
+        <td class="muted">${formatDate(m.created_at)}</td>
+        <td>
+          <select class="status-select ${status}" data-id="${m.id}">
+            <option value="inactive" ${status === 'inactive' ? 'selected' : ''}>Inactive</option>
+            <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="active" ${status === 'active' ? 'selected' : ''}>Active</option>
+          </select>
+        </td>
+        <td><div class="tag-checks">${tagChecks}</div></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Tag checkbox handlers
+    tbody.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', async (e) => {
+        const id = e.target.dataset.id;
+        const member = allMembers.find(m => m.id === id);
+        const row = e.target.closest('tr');
+        const checks = row.querySelectorAll('input[type=checkbox]');
+        const newTags = Array.from(checks).filter(c => c.checked).map(c => c.dataset.tag);
+
+        const { error } = await supabase.from('profiles').update({ tags: newTags }).eq('id', id);
+        if (error) {
+          showStatus(tableStatus, error.message, true);
+          e.target.checked = !e.target.checked; // revert
+          return;
+        }
+        member.tags = newTags;
+
+        // Reflect possible auto-activation from the DB trigger
+        const { data: refreshed } = await supabase.from('profiles').select('membership_status').eq('id', id).single();
+        if (refreshed) {
+          member.membership_status = refreshed.membership_status;
+          const select = row.querySelector('select.status-select');
+          select.value = refreshed.membership_status;
+          select.className = 'status-select ' + refreshed.membership_status;
+        }
+
+        showStatus(tableStatus, 'Tags updated.');
+        renderStats();
+        renderCharts();
+      });
+    });
+
+    // Membership status dropdown handlers
+    tbody.querySelectorAll('select.status-select').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
+        const id = e.target.dataset.id;
+        const newStatus = e.target.value;
+        const { error } = await supabase.from('profiles').update({ membership_status: newStatus }).eq('id', id);
+        if (error) {
+          showStatus(tableStatus, error.message, true);
+          return;
+        }
+        const member = allMembers.find(m => m.id === id);
+        if (member) member.membership_status = newStatus;
+        e.target.className = 'status-select ' + newStatus;
+        showStatus(tableStatus, 'Membership status updated.');
+        renderStats();
+        renderCharts();
+      });
+    });
+  }
+
+  // Header scroll + hamburger (same pattern as other pages)
+  const siteHeader = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 80) siteHeader.classList.add('scrolled');
+    else siteHeader.classList.remove('scrolled');
+  });
+  const hamburger = document.getElementById('hamburger');
+  const mainNav = document.getElementById('mainNav');
+  hamburger.addEventListener('click', () => {
+    const isOpen = mainNav.classList.toggle('open');
+    hamburger.classList.toggle('open', isOpen);
+    hamburger.setAttribute('aria-expanded', isOpen);
+  });
+  mainNav.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      mainNav.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  init();
+})();
+}
+</script>
+
+</body>
+</html>
