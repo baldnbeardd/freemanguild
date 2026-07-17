@@ -412,6 +412,21 @@
     <p style="font-size:13px; color:var(--muted); line-height:1.6;">Annual membership purchasing is coming soon.</p>
 
     <div class="section-title">Account</div>
+
+    <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:20px;">
+      If you signed up via email link, you don't have a password yet — set one below so you can sign in directly next time. Already have one? This updates it.
+    </p>
+
+    <div id="passwordStatus" class="status-msg"></div>
+
+    <label class="label" for="newPassword">New Password</label>
+    <input type="password" id="newPassword" placeholder="••••••••">
+
+    <label class="label" for="confirmPassword">Confirm New Password</label>
+    <input type="password" id="confirmPassword" placeholder="••••••••">
+
+    <button id="setPasswordBtn">Set / Update Password</button>
+
     <button id="signOutBtn">Sign Out</button>
     <button id="unsubscribeBtn" class="danger">Unsubscribe from Communications</button>
   </div>
@@ -705,6 +720,39 @@ window.__freemanMembersInit = true;
         saveBtn.textContent = originalLabel;
         saveBtn.disabled = false;
       }, 1500);
+    }
+  });
+
+  document.getElementById('setPasswordBtn').addEventListener('click', async () => {
+    const passStatus = document.getElementById('passwordStatus');
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (!newPassword || newPassword.length < 6) {
+      showStatus(passStatus, 'Password must be at least 6 characters.', true);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showStatus(passStatus, 'Passwords do not match.', true);
+      return;
+    }
+
+    const btn = document.getElementById('setPasswordBtn');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+
+    if (error) {
+      showStatus(passStatus, error.message, true);
+    } else {
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      showStatus(passStatus, '✓ Password set. You can now sign in with email + password.', false, true);
     }
   });
 
