@@ -25,30 +25,73 @@
   a { color: inherit; text-decoration: none; }
 
   header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 30px 60px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 40px;
-    border-bottom: 1px solid var(--line);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  header.scrolled {
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 20px 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
   .logo {
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    font-size: 14px;
+    height: 70px;
+    width: auto;
+    opacity: 0.95;
+  }
+  header nav {
+    display: flex;
+    gap: 50px;
   }
   header nav a {
+    color: #e0e0e0;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 300;
     text-transform: uppercase;
     letter-spacing: 2px;
-    font-size: 12px;
-    color: var(--muted);
-    margin-left: 24px;
+    transition: all 0.3s;
+    position: relative;
   }
-  header nav a:hover { color: var(--fg); }
+  header nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #fff;
+    transition: width 0.3s;
+  }
+  header nav a:hover::after {
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+    header { padding: 20px 30px; }
+    header.scrolled { padding: 18px 30px; }
+    header nav { gap: 25px; }
+    header nav a { font-size: 12px; }
+  }
+  @media (max-width: 480px) {
+    header { padding: 16px 20px; }
+    header.scrolled { padding: 14px 20px; }
+    .logo { height: 50px; }
+    header nav { gap: 16px; }
+    header nav a { font-size: 11px; letter-spacing: 1px; }
+  }
 
   main {
     max-width: 480px;
     margin: 0 auto;
-    padding: 60px 24px 100px;
+    padding: 160px 24px 100px;
   }
 
   h1 {
@@ -189,11 +232,17 @@
 </head>
 <body>
 
-<header>
-  <a href="index.html" class="logo">Freeman Guild</a>
+<header id="siteHeader">
+  <a href="index.html" class="logo-link">
+    <img src="logo.png" alt="Freeman Guild" class="logo">
+  </a>
   <nav>
     <a href="index.html">Home</a>
+    <a href="index.html#about">About</a>
+    <a href="index.html#philosophy">Philosophy</a>
     <a href="merch.html">Merch</a>
+    <a href="members.html">Members</a>
+    <a href="index.html#contact">Contact</a>
   </nav>
 </header>
 
@@ -281,9 +330,8 @@ window.__freemanMembersInit = true;
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const GENRES = [
-    'Rock', 'Hip-Hop', 'Jazz', 'Electronic',
-    'R&B', 'Country', 'Pop', 'Classical',
-    'Reggae', 'Metal', 'Folk', 'Latin'
+    'Disco', 'House', 'Techno',
+    'Electro', 'Jungle/Drum & Bass', 'Hip Hop'
   ];
 
   let isSignUp = false;
@@ -445,6 +493,15 @@ window.__freemanMembersInit = true;
 
   document.getElementById('signOutBtn').addEventListener('click', async () => {
     await supabase.auth.signOut();
+  });
+
+  const siteHeader = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 80) {
+      siteHeader.classList.add('scrolled');
+    } else {
+      siteHeader.classList.remove('scrolled');
+    }
   });
 
   init();
