@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeman Guild</title>
     <meta name="description" content="Where Craft Meets Consciousness">
+    <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     
     <style>
         * {
@@ -878,6 +879,10 @@
         (function () {
             var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfpLBp1eOTPid90Ot48OKTGqzLju_LdbIWQ5hGUcnm8LUj0TeG-l2LHWOOtF10goc4/exec';
 
+            var SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
+            var SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
+            var supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
             var overlay = document.getElementById('join-modal-overlay');
             var closeBtn = overlay.querySelector('.join-modal-close');
             var contentEl = document.getElementById('join-modal-content');
@@ -942,11 +947,12 @@
                 eyebrow.textContent = 'Join';
 
                 var heading = document.createElement('h2');
-                heading.textContent = "You're In";
+                heading.textContent = "Almost There";
 
                 var sub = document.createElement('p');
                 sub.className = 'join-modal-sub';
-                sub.textContent = (firstName ? 'Thanks, ' + firstName + ' — ' : 'Thanks — ') + "we'll be in touch soon.";
+                sub.textContent = (firstName ? 'Thanks, ' + firstName + ' — ' : 'Thanks — ') +
+                    "check your email for a confirmation link to finish setting up your account. Check spam if you don't see it.";
 
                 contentEl.innerHTML = '';
                 contentEl.appendChild(icon);
@@ -954,7 +960,7 @@
                 contentEl.appendChild(heading);
                 contentEl.appendChild(sub);
 
-                setTimeout(closeModal, 2800);
+                setTimeout(closeModal, 5000);
             }
 
             function attachFormHandler() {
@@ -990,20 +996,41 @@
                     submitBtn.disabled = true;
                     btnText.textContent = 'Sending…';
 
+                    // Mirror the submission into the Google Sheet too (best-effort,
+                    // doesn't block or affect success/error state below)
                     fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ name: name, email: email, phone: phone, facebook: facebook })
-                    })
-                        .then(function () {
-                            showSuccess(name.split(' ')[0]);
-                        })
-                        .catch(function () {
+                    }).catch(function () { /* Sheets is supplementary — ignore failures here */ });
+
+                    if (!supabaseClient) {
+                        submitBtn.disabled = false;
+                        btnText.textContent = 'Request to Join';
+                        errorMsg.hidden = false;
+                        return;
+                    }
+
+                    // This is the same account system as the Members page — a magic
+                    // link creates a real login (no password needed here), tagged
+                    // 'non-member' until an admin upgrades them.
+                    supabaseClient.auth.signInWithOtp({
+                        email: email,
+                        options: {
+                            data: { full_name: name, phone: phone, facebook: facebook },
+                            emailRedirectTo: window.location.origin + '/members.html'
+                        }
+                    }).then(function (res) {
+                        if (res.error) {
                             submitBtn.disabled = false;
                             btnText.textContent = 'Request to Join';
                             errorMsg.hidden = false;
-                        });
+                            console.error('Supabase signup failed:', res.error.message);
+                        } else {
+                            showSuccess(name.split(' ')[0]);
+                        }
+                    });
                 });
             }
 
