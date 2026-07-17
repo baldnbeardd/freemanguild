@@ -760,7 +760,7 @@
             <div class="footer-section">
                 <h3>Join</h3>
                 <a href="members.html">Register</a>
-            <!-- <a href="#" class="js-join-trigger">Collaborate</a> -->
+                <a href="#" class="js-join-trigger">Collaborate</a>
             </div>
             
         </div>
@@ -1035,6 +1035,98 @@
             }
 
             attachFormHandler();
+        })();
+    </script>
+    <script>
+        // Psychedelic mouse/touch trail — self-contained, doesn't touch any other logic
+        (function () {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            var canvas = document.createElement('canvas');
+            canvas.id = 'lsdTrailCanvas';
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.pointerEvents = 'none';
+            canvas.style.zIndex = '9999';
+            canvas.style.mixBlendMode = 'screen';
+            document.body.appendChild(canvas);
+
+            var ctx = canvas.getContext('2d');
+            var dpr = window.devicePixelRatio || 1;
+
+            function resize() {
+                canvas.width = window.innerWidth * dpr;
+                canvas.height = window.innerHeight * dpr;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            var particles = [];
+            var hue = 0;
+
+            function addParticle(x, y) {
+                hue = (hue + 5) % 360;
+                for (var i = 0; i < 2; i++) {
+                    particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 2.2,
+                        vy: (Math.random() - 0.5) * 2.2,
+                        life: 1,
+                        size: 8 + Math.random() * 14,
+                        hue: (hue + Math.random() * 50) % 360
+                    });
+                }
+            }
+
+            var lastX = null, lastY = null;
+            window.addEventListener('mousemove', function (e) {
+                // interpolate a few points between fast movements for a smooth trail
+                if (lastX !== null) {
+                    var dist = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+                    var steps = Math.min(Math.floor(dist / 8), 6);
+                    for (var i = 1; i <= steps; i++) {
+                        var t = i / (steps + 1);
+                        addParticle(lastX + (e.clientX - lastX) * t, lastY + (e.clientY - lastY) * t);
+                    }
+                }
+                addParticle(e.clientX, e.clientY);
+                lastX = e.clientX;
+                lastY = e.clientY;
+            });
+            window.addEventListener('touchmove', function (e) {
+                if (e.touches[0]) addParticle(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.globalCompositeOperation = 'lighter';
+                for (var i = particles.length - 1; i >= 0; i--) {
+                    var p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.025;
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+                    var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                    grad.addColorStop(0, 'hsla(' + p.hue + ', 100%, 65%, ' + (p.life * 0.9) + ')');
+                    grad.addColorStop(1, 'hsla(' + p.hue + ', 100%, 65%, 0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
         })();
     </script>
 
