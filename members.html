@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Member Area — Freeman Guild</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="document.getElementById('loadingView').innerHTML='Failed to load required library. Please refresh, or check your connection.'"></script>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -262,10 +262,21 @@
 </main>
 
 <script>
+if (window.__freemanMembersInit) {
+  console.warn('Member area script already initialized — skipping duplicate run.');
+} else {
+window.__freemanMembersInit = true;
+(function() {
   // ====== CONFIGURE THESE TWO VALUES ======
   const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
   // =========================================
+
+  if (!window.supabase) {
+    document.getElementById('loadingView').innerHTML =
+      'Could not load required library. Please refresh the page. If this keeps happening, contact the site admin.';
+    throw new Error('supabase-js failed to load from CDN');
+  }
 
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -300,12 +311,18 @@
   }
 
   async function init() {
-    const { data: { session } } = await supabase.auth.getSession();
-    loadingView.classList.add('hidden');
-    if (session) {
-      await loadDashboard(session.user);
-    } else {
-      authView.classList.remove('hidden');
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      loadingView.classList.add('hidden');
+      if (session) {
+        await loadDashboard(session.user);
+      } else {
+        authView.classList.remove('hidden');
+      }
+    } catch (err) {
+      loadingView.textContent = 'Something went wrong loading the member area: ' + err.message;
+      console.error('Member area init failed:', err);
     }
   }
 
@@ -431,6 +448,8 @@
   });
 
   init();
+})();
+}
 </script>
 
 </body>
