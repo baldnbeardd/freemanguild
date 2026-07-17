@@ -74,18 +74,57 @@
     width: 100%;
   }
 
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 30px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1100;
+  }
+  .hamburger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: #e0e0e0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
   @media (max-width: 768px) {
     header { padding: 20px 30px; }
     header.scrolled { padding: 18px 30px; }
-    header nav { gap: 25px; }
-    header nav a { font-size: 12px; }
+    .hamburger { display: flex; }
+    header nav {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      height: 100vh;
+      width: min(75vw, 320px);
+      background: rgba(10, 10, 10, 0.98);
+      backdrop-filter: blur(20px);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 36px;
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    header nav.open { right: 0; }
+    header nav a { font-size: 15px; }
   }
   @media (max-width: 480px) {
     header { padding: 16px 20px; }
     header.scrolled { padding: 14px 20px; }
     .logo { height: 50px; }
-    header nav { gap: 16px; }
-    header nav a { font-size: 11px; letter-spacing: 1px; }
+    header nav a { font-size: 14px; }
   }
 
   main {
@@ -208,6 +247,18 @@
     margin-bottom: 16px;
   }
   .status-msg.error { color: #ff5a5a; }
+  .status-msg.success { color: #2ea043; }
+
+  .confirm-notice {
+    border: 1px solid var(--accent);
+    background: rgba(74, 158, 255, 0.08);
+    color: var(--fg);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  .confirm-notice strong { color: var(--accent); }
 
   .danger {
     border-color: #7a2a2a;
@@ -277,7 +328,7 @@
   <a href="index.html" class="logo-link">
     <img src="logo.png" alt="Freeman Guild" class="logo">
   </a>
-  <nav>
+  <nav id="mainNav">
     <a href="index.html">Home</a>
     <a href="index.html#about">About</a>
     <a href="index.html#philosophy">Philosophy</a>
@@ -285,6 +336,11 @@
     <a href="members.html">Members</a>
     <a href="index.html#contact">Contact</a>
   </nav>
+  <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </header>
 
 <main>
@@ -294,6 +350,8 @@
   <!-- ===================== LOGGED OUT VIEW ===================== -->
   <div id="authView" class="hidden">
     <h1>Member Login</h1>
+
+    <div id="confirmNotice" class="confirm-notice hidden"></div>
 
     <button class="btn btn-google" id="googleBtn">Continue with Google</button>
 
@@ -402,10 +460,10 @@ window.__freemanMembersInit = true;
     genreGrid.appendChild(wrap);
   });
 
-  function showStatus(el, text, isError = false) {
+  function showStatus(el, text, isError = false, isSuccess = false) {
     el.textContent = text;
-    el.className = 'status-msg' + (isError ? ' error' : '');
-    if (text) setTimeout(() => { el.textContent = ''; }, 4000);
+    el.className = 'status-msg' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
+    if (text) setTimeout(() => { el.textContent = ''; el.className = 'status-msg'; }, 3000);
   }
 
   async function init() {
@@ -452,6 +510,7 @@ window.__freemanMembersInit = true;
       ? `Already have an account? <span id="toggleModeLink">Sign in</span>`
       : `Don't have an account? <span id="toggleModeLink">Sign up</span>`;
     document.getElementById('toggleModeLink').addEventListener('click', handleToggleClick);
+    document.getElementById('confirmNotice').classList.add('hidden');
   }
   document.getElementById('toggleModeLink').addEventListener('click', handleToggleClick);
 
@@ -464,11 +523,26 @@ window.__freemanMembersInit = true;
     }
     if (isSignUp) {
       const { error } = await supabase.auth.signUp({ email, password });
-      if (error) showStatus(statusMsg, error.message, true);
-      else showStatus(statusMsg, 'Check your email to confirm your account.');
+      if (error) {
+        showStatus(statusMsg, error.message, true);
+      } else {
+        const notice = document.getElementById('confirmNotice');
+        notice.innerHTML = `<strong>Almost there —</strong> we sent a confirmation link to <strong>${email}</strong>. You won't be able to sign in until you click that link, so check your inbox now. Don't see it within a few minutes? Check your spam or junk folder too.`;
+        notice.classList.remove('hidden');
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authPassword').value = '';
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) showStatus(statusMsg, error.message, true);
+      if (error) {
+        if (/confirm/i.test(error.message)) {
+          const notice = document.getElementById('confirmNotice');
+          notice.innerHTML = `<strong>Email not confirmed yet.</strong> We sent a confirmation link to <strong>${email}</strong> when you signed up — you need to click it before you can sign in. Check your inbox, and your spam or junk folder if it's not there.`;
+          notice.classList.remove('hidden');
+        } else {
+          showStatus(statusMsg, error.message, true);
+        }
+      }
     }
   });
 
@@ -603,6 +677,11 @@ window.__freemanMembersInit = true;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
+    const saveBtn = document.getElementById('saveBtn');
+    const originalLabel = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
     const selectedGenres = GENRES.filter(g => {
       const id = 'genre_' + g.replace(/[^a-z0-9]/gi, '');
       return document.getElementById(id).checked;
@@ -615,8 +694,18 @@ window.__freemanMembersInit = true;
       genres: selectedGenres
     }).eq('id', session.user.id);
 
-    if (error) showStatus(saveStatus, error.message, true);
-    else showStatus(saveStatus, 'Saved.');
+    if (error) {
+      showStatus(saveStatus, error.message, true);
+      saveBtn.textContent = originalLabel;
+      saveBtn.disabled = false;
+    } else {
+      showStatus(saveStatus, '✓ Changes saved', false, true);
+      saveBtn.textContent = '✓ Saved';
+      setTimeout(() => {
+        saveBtn.textContent = originalLabel;
+        saveBtn.disabled = false;
+      }, 1500);
+    }
   });
 
   document.getElementById('unsubscribeBtn').addEventListener('click', async () => {
@@ -646,6 +735,22 @@ window.__freemanMembersInit = true;
     } else {
       siteHeader.classList.remove('scrolled');
     }
+  });
+
+  // Hamburger menu toggle
+  const hamburger = document.getElementById('hamburger');
+  const mainNav = document.getElementById('mainNav');
+  hamburger.addEventListener('click', () => {
+    const isOpen = mainNav.classList.toggle('open');
+    hamburger.classList.toggle('open', isOpen);
+    hamburger.setAttribute('aria-expanded', isOpen);
+  });
+  mainNav.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      mainNav.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
   });
 
   init();

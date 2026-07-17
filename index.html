@@ -77,6 +77,30 @@
             width: 100%;
         }
 
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 30px;
+            height: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1100;
+        }
+        .hamburger span {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
         .hero {
             height: 100vh;
             display: flex;
@@ -531,11 +555,29 @@
             header.scrolled {
                 padding: 18px 30px;
             }
+            .hamburger {
+                display: flex;
+            }
             nav {
-                gap: 25px;
+                position: fixed;
+                top: 0;
+                right: -100%;
+                height: 100vh;
+                width: min(75vw, 320px);
+                background: rgba(10, 10, 10, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 36px;
+                transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                border-left: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            nav.open {
+                right: 0;
             }
             nav a {
-                font-size: 12px;
+                font-size: 15px;
             }
             .section {
                 padding: 100px 30px;
@@ -559,12 +601,8 @@
             .logo {
                 height: 50px;
             }
-            nav {
-                gap: 16px;
-            }
             nav a {
-                font-size: 11px;
-                letter-spacing: 1px;
+                font-size: 14px;
             }
             .hero-content {
                 padding: 0 20px;
@@ -619,7 +657,7 @@
         <a href="#home" class="logo-link">
             <img src="logo.png" alt="Freeman Guild" class="logo">
         </a>
-        <nav>
+        <nav id="mainNav">
             <a href="#home">Home</a>
             <a href="#about">About</a>
             <a href="#philosophy">Philosophy</a>
@@ -627,6 +665,11 @@
             <a href="members.html">Members</a>
             <a href="#contact">Contact</a>
         </nav>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </header>
 
     <!-- Hero -->
@@ -781,6 +824,22 @@
             } else {
                 header.classList.remove('scrolled');
             }
+        });
+
+        // Hamburger menu toggle
+        const hamburger = document.getElementById('hamburger');
+        const mainNav = document.getElementById('mainNav');
+        hamburger.addEventListener('click', () => {
+            const isOpen = mainNav.classList.toggle('open');
+            hamburger.classList.toggle('open', isOpen);
+            hamburger.setAttribute('aria-expanded', isOpen);
+        });
+        mainNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mainNav.classList.remove('open');
+                hamburger.classList.remove('open');
+                hamburger.setAttribute('aria-expanded', 'false');
+            });
         });
 
         // Smooth scroll for navigation
