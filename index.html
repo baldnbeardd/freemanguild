@@ -83,6 +83,10 @@
             width: 100%;
         }
 
+        .header-avatar-wrap {
+            position: relative;
+        }
+
         .header-avatar {
             width: 38px;
             height: 38px;
@@ -94,6 +98,8 @@
             justify-content: center;
             background: #151515;
             flex-shrink: 0;
+            padding: 0;
+            cursor: pointer;
             transition: border-color 0.3s;
         }
 
@@ -112,6 +118,38 @@
             font-weight: 400;
             color: #8a8a8a;
             text-transform: uppercase;
+        }
+
+        .header-avatar-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 170px;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px;
+            z-index: 1200;
+        }
+
+        .header-avatar-menu-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 10px 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .header-avatar-menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .hidden {
@@ -527,12 +565,18 @@
                 <a href="merch.html">Merch</a>
                 <a href="members.html">Members</a>
                 <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
-                <a href="#contact">Contact</a>
+                <a href="#contact" class="hidden">Contact</a>
             </nav>
-            <a href="members.html" id="headerAvatarLink" class="header-avatar hidden" title="My Profile">
-                <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
-                <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
-            </a>
+            <div class="header-avatar-wrap" id="headerAvatarWrap">
+                <button type="button" id="headerAvatarBtn" class="header-avatar hidden" aria-haspopup="true" aria-expanded="false" title="Account menu">
+                    <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
+                    <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
+                </button>
+                <div id="headerAvatarMenu" class="header-avatar-menu hidden">
+                    <a href="members.html" class="header-avatar-menu-item">My Profile</a>
+                    <button type="button" id="headerLogoutBtn" class="header-avatar-menu-item">Log Out</button>
+                </div>
+            </div>
             <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
                 <span></span>
                 <span></span>
@@ -803,14 +847,17 @@
             const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
             if (!window.supabase) return;
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            const avatarLink = document.getElementById('headerAvatarLink');
+            const avatarWrap = document.getElementById('headerAvatarWrap');
+            const avatarBtn = document.getElementById('headerAvatarBtn');
             const avatarImg = document.getElementById('headerAvatarImg');
             const avatarPlaceholder = document.getElementById('headerAvatarPlaceholder');
+            const avatarMenu = document.getElementById('headerAvatarMenu');
+            const logoutBtn = document.getElementById('headerLogoutBtn');
             const navAdminLink = document.getElementById('navAdminLink');
             function applyHeaderAuthUI(profile) {
-                if (!profile || !avatarLink) return;
-                avatarLink.classList.toggle('active', profile.membership_status === 'active');
-                avatarLink.classList.remove('hidden');
+                if (!profile || !avatarBtn) return;
+                avatarBtn.classList.toggle('active', profile.membership_status === 'active');
+                avatarBtn.classList.remove('hidden');
                 if (profile.avatar_url) {
                     avatarImg.src = profile.avatar_url;
                     avatarImg.classList.remove('hidden');
@@ -820,9 +867,48 @@
                     avatarPlaceholder.classList.remove('hidden');
                     avatarPlaceholder.textContent = (profile.name || profile.email || '?').trim().charAt(0).toUpperCase();
                 }
-                if (navAdminLink && (profile.tags || []).includes('admin')) {
-                    navAdminLink.classList.remove('hidden');
+                if (navAdminLink) {
+                    navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
                 }
+            }
+            function resetHeaderAuthUI() {
+                if (avatarBtn) avatarBtn.classList.add('hidden');
+                if (navAdminLink) navAdminLink.classList.add('hidden');
+                closeAvatarMenu();
+            }
+            function closeAvatarMenu() {
+                if (!avatarMenu) return;
+                avatarMenu.classList.add('hidden');
+                avatarBtn.setAttribute('aria-expanded', 'false');
+            }
+            function toggleAvatarMenu() {
+                if (!avatarMenu) return;
+                const isOpen = !avatarMenu.classList.contains('hidden');
+                if (isOpen) {
+                    closeAvatarMenu();
+                } else {
+                    avatarMenu.classList.remove('hidden');
+                    avatarBtn.setAttribute('aria-expanded', 'true');
+                }
+            }
+            if (avatarBtn) {
+                avatarBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleAvatarMenu();
+                });
+            }
+            document.addEventListener('click', (e) => {
+                if (avatarWrap && !avatarWrap.contains(e.target)) closeAvatarMenu();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeAvatarMenu();
+            });
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    closeAvatarMenu();
+                    await supabase.auth.signOut();
+                    resetHeaderAuthUI();
+                });
             }
             async function loadHeaderAuth() {
                 try {
