@@ -6,13 +6,21 @@
     <title>Freeman Guild</title>
     <meta name="description" content="Where Craft Meets Consciousness">
 
+    <!-- Open Graph / Facebook link preview -->
+    <meta property="og:title" content="Freeman Guild" />
+    <meta property="og:description" content="Where Craft Meets Consciousness" />
+    <meta property="og:image" content="https://freemanguild.com/fg.jpg" />
+    <meta property="og:url" content="https://freemanguild.com" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://freemanguild.com/fg.jpg" />
+
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
             background: #0a0a0a;
@@ -20,7 +28,6 @@
             line-height: 1.6;
             overflow-x: hidden;
         }
-
         header {
             position: fixed;
             top: 0;
@@ -32,31 +39,26 @@
             align-items: center;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         header.scrolled {
             background: rgba(10, 10, 10, 0.95);
             backdrop-filter: blur(20px);
             padding: 20px 60px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         .logo {
             height: 70px;
             width: auto;
             opacity: 0.95;
         }
-
         .nav-wrap {
             display: flex;
             align-items: center;
             gap: 28px;
         }
-
         nav {
             display: flex;
             gap: 50px;
         }
-
         nav a {
             color: #e0e0e0;
             text-decoration: none;
@@ -67,7 +69,6 @@
             transition: all 0.3s;
             position: relative;
         }
-
         nav a::after {
             content: '';
             position: absolute;
@@ -78,15 +79,12 @@
             background: #fff;
             transition: width 0.3s;
         }
-
         nav a:hover::after {
             width: 100%;
         }
-
         .header-avatar-wrap {
             position: relative;
         }
-
         .header-avatar {
             width: 38px;
             height: 38px;
@@ -102,24 +100,20 @@
             cursor: pointer;
             transition: border-color 0.3s;
         }
-
         .header-avatar.active {
             border-color: #2ea043;
         }
-
         .header-avatar-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
         .header-avatar-placeholder {
             font-size: 13px;
             font-weight: 400;
             color: #8a8a8a;
             text-transform: uppercase;
         }
-
         .header-avatar-menu {
             position: absolute;
             top: calc(100% + 12px);
@@ -130,7 +124,6 @@
             padding: 6px;
             z-index: 1200;
         }
-
         .header-avatar-menu-item {
             display: block;
             width: 100%;
@@ -147,15 +140,12 @@
             cursor: pointer;
             text-decoration: none;
         }
-
         .header-avatar-menu-item:hover {
             background: rgba(255, 255, 255, 0.08);
         }
-
         .hidden {
             display: none;
         }
-
         .hamburger {
             display: none;
             flex-direction: column;
@@ -179,7 +169,6 @@
         .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
         .hamburger.open span:nth-child(2) { opacity: 0; }
         .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
         .hero {
             height: 100vh;
             display: flex;
@@ -188,29 +177,24 @@
             position: relative;
             overflow: hidden;
         }
-
         .hero-lines {
             position: absolute;
             width: 100%;
             height: 100%;
             opacity: 0.03;
         }
-
         .line {
             position: absolute;
             background: #fff;
             animation: float 20s ease-in-out infinite;
         }
-
         .line-1 { width: 1px; height: 100%; left: 20%; }
         .line-2 { width: 1px; height: 100%; left: 50%; animation-delay: 2s; }
         .line-3 { width: 1px; height: 100%; left: 80%; animation-delay: 4s; }
-
         @keyframes float {
             0%, 100% { transform: translateY(0); opacity: 0.03; }
             50% { transform: translateY(-20px); opacity: 0.06; }
         }
-
         .hero-content {
             position: relative;
             z-index: 10;
@@ -218,7 +202,6 @@
             max-width: 900px;
             padding: 0 30px;
         }
-
         .hero h1 {
             font-size: clamp(60px, 10vw, 140px);
             font-weight: 200;
@@ -235,7 +218,6 @@
             -webkit-text-fill-color: transparent;
             animation: spotlights 8s ease-in-out infinite;
         }
-
         @keyframes spotlights {
             0% {
                 background-position: -50% 0%, 150% 150%, 0 0;
@@ -253,7 +235,6 @@
                 background-position: -50% 0%, 150% 150%, 0 0;
             }
         }
-
         .hero p {
             font-size: 18px;
             font-weight: 300;
@@ -261,7 +242,6 @@
             opacity: 0.6;
             letter-spacing: 1px;
         }
-
         .cta-button {
             display: inline-block;
             padding: 16px 60px;
@@ -275,18 +255,15 @@
             transition: all 0.4s;
             font-size: 12px;
         }
-
         .cta-button:hover {
             background: #fff;
             color: #0a0a0a;
             border-color: #fff;
         }
-
         .section {
             padding: 150px 60px;
             position: relative;
         }
-
         .section-title {
             font-size: clamp(40px, 6vw, 80px);
             font-weight: 200;
@@ -294,7 +271,6 @@
             margin-bottom: 80px;
             letter-spacing: -1px;
         }
-
         .media-embed {
             max-width: 1000px;
             margin: 0 auto 100px;
@@ -303,7 +279,6 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden;
         }
-
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -311,24 +286,20 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-
         .stat {
             text-align: center;
             padding: 40px 20px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: border-color 0.3s;
         }
-
         .stat:hover {
             border-color: rgba(255, 255, 255, 0.2);
         }
-
         .stat-number {
             font-size: clamp(32px, 5vw, 56px);
             font-weight: 200;
             margin-bottom: 20px;
         }
-
         .stat-label {
             font-size: 13px;
             font-weight: 300;
@@ -336,7 +307,6 @@
             letter-spacing: 2px;
             opacity: 0.5;
         }
-
         .about-text {
             text-align: center;
             max-width: 900px;
@@ -345,7 +315,6 @@
             line-height: 1.8;
             opacity: 0.7;
         }
-
         .principles {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -353,25 +322,21 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-
         .principle {
             padding: 40px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s;
         }
-
         .principle:hover {
             border-color: rgba(255, 255, 255, 0.15);
             background: rgba(255, 255, 255, 0.01);
         }
-
         .principle-number {
             font-size: 48px;
             font-weight: 200;
             margin-bottom: 20px;
             opacity: 0.3;
         }
-
         .principle-title {
             font-size: 20px;
             font-weight: 400;
@@ -379,20 +344,17 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
         .principle-desc {
             font-size: 14px;
             line-height: 1.8;
             opacity: 0.6;
         }
-
         /* Footer */
         footer {
             background: rgba(0, 0, 0, 0.5);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             padding: 80px 60px 40px;
         }
-
         .footer-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -400,26 +362,22 @@
             max-width: 1200px;
             margin: 0 auto 60px;
         }
-
         .footer-section {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
-
         .footer-section h3 {
             font-size: 14px;
             font-weight: 400;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
-
         .footer-section p {
             font-size: 14px;
             line-height: 1.8;
             opacity: 0.5;
         }
-
         .footer-section a {
             color: #e0e0e0;
             text-decoration: none;
@@ -428,16 +386,13 @@
             transition: all 0.3s;
             width: fit-content;
         }
-
         .footer-section a:hover {
             opacity: 0.6;
         }
-
         .social-links {
             display: flex;
             gap: 30px;
         }
-
         .copyright {
             text-align: center;
             font-size: 11px;
@@ -447,7 +402,6 @@
             padding-top: 40px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         /* Responsive */
         @media (max-width: 768px) {
             header {
@@ -494,7 +448,6 @@
                 gap: 50px;
             }
         }
-
         @media (max-width: 480px) {
             header {
                 padding: 16px 20px;
@@ -551,7 +504,6 @@
     </style>
 </head>
 <body>
-
     <!-- Header -->
     <header id="home">
         <a href="#home" class="logo-link">
@@ -584,7 +536,6 @@
             </button>
         </div>
     </header>
-
     <!-- Hero -->
     <section class="hero">
         <div class="hero-lines">
@@ -598,19 +549,15 @@
             <a href="#about" class="cta-button">Explore</a>
         </div>
     </section>
-
     <!-- About / Vision -->
     <section class="section" id="about">
         <!-- <div>
         <img src="sosticeparty.png" alt="Solstice Party">
         </div> -->
-
         <h2 class="section-title">Our Vision</h2>
-
         <p class="about-text">
             The Freeman Guild is a collective dedicated to excellence, authenticity, and the pursuit of meaningful events that transcends the ordinary.
         </p>
-
         <div class="stats">
             <div class="stat">
                 <div class="stat-number">2019</div>
@@ -626,11 +573,9 @@
             </div>
         </div>
     </section>
-
     <!-- Philosophy -->
     <section class="section" id="philosophy">
         <h2 class="section-title">Core Principles</h2>
-
         <div class="principles">
             <div class="principle">
                 <div class="principle-number">01</div>
@@ -654,33 +599,27 @@
             </div>
         </div>
     </section>
-
     <!-- Footer -->
     <footer id="contact">
         <div class="footer-content">
             <div class="footer-section">
                 <h3>Freeman Guild</h3>
                 <p>A collective dedicated to community, authenticity, and the pursuit of meaningful events that transcends the ordinary.</p>
-
                 <div class="social-links">
                     <a href="https://www.facebook.com/groups/427911264827896" target="_blank">FB</a>
           <!--           <a href="#" target="_blank">IG</a>
                     <a href="#" target="_blank">SC</a>
            -->      </div>
             </div>
-
             <div class="footer-section">
                 <h3>Join</h3>
                 <a href="members.html">Register</a>
             </div>
-
         </div>
-
         <div class="copyright">
             © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.
         </div>
     </footer>
-
     <script>
         // Header scroll effect
         const header = document.querySelector('header');
@@ -691,7 +630,6 @@
                 header.classList.remove('scrolled');
             }
         });
-
         // Hamburger menu toggle
         const hamburger = document.getElementById('hamburger');
         const mainNav = document.getElementById('mainNav');
@@ -707,7 +645,6 @@
                 hamburger.setAttribute('aria-expanded', 'false');
             });
         });
-
         // Smooth scroll for navigation
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
@@ -721,7 +658,6 @@
                 }
             });
         });
-
         // Fade-in animations on scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -732,20 +668,17 @@
                 }
             });
         }, { threshold: 0.15 });
-
         // Observe elements for animation
         document.querySelectorAll('.section-title, .stat, .about-text, .principle').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(30px)';
             observer.observe(el);
         });
-
     </script>
     <script>
         // Psychedelic mouse/touch trail — self-contained, doesn't touch any other logic
         (function () {
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
             var canvas = document.createElement('canvas');
             canvas.id = 'lsdTrailCanvas';
             canvas.style.position = 'fixed';
@@ -757,10 +690,8 @@
             canvas.style.zIndex = '9999';
             canvas.style.mixBlendMode = 'screen';
             document.body.appendChild(canvas);
-
             var ctx = canvas.getContext('2d');
             var dpr = window.devicePixelRatio || 1;
-
             function resize() {
                 canvas.width = window.innerWidth * dpr;
                 canvas.height = window.innerHeight * dpr;
@@ -770,10 +701,8 @@
             }
             resize();
             window.addEventListener('resize', resize);
-
             var particles = [];
             var hue = 0;
-
             function addParticle(x, y) {
                 hue = (hue + 5) % 360;
                 for (var i = 0; i < 2; i++) {
@@ -788,7 +717,6 @@
                     });
                 }
             }
-
             var lastX = null, lastY = null;
             window.addEventListener('mousemove', function (e) {
                 // interpolate a few points between fast movements for a smooth trail
@@ -807,7 +735,6 @@
             window.addEventListener('touchmove', function (e) {
                 if (e.touches[0]) addParticle(e.touches[0].clientX, e.touches[0].clientY);
             }, { passive: true });
-
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.globalCompositeOperation = 'lighter';
@@ -928,6 +855,5 @@
         })();
         }
     </script>
-
 </body>
 </html>
