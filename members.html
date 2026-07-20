@@ -45,9 +45,35 @@
     width: auto;
     opacity: 0.95;
   }
+  .nav-wrap {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
   header nav {
     display: flex;
     gap: 50px;
+  }
+  .header-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid #da3633;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #151515;
+    flex-shrink: 0;
+    transition: border-color 0.3s;
+  }
+  .header-avatar.active { border-color: #2ea043; }
+  .header-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+  .header-avatar-placeholder {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    text-transform: uppercase;
   }
   header nav a {
     color: #e0e0e0;
@@ -99,6 +125,7 @@
     header { padding: 20px 30px; }
     header.scrolled { padding: 18px 30px; }
     .hamburger { display: flex; }
+    .nav-wrap { gap: 18px; }
     header nav {
       position: fixed;
       top: 0;
@@ -122,6 +149,7 @@
     header.scrolled { padding: 14px 20px; }
     .logo { height: 50px; }
     header nav a { font-size: 14px; }
+    .header-avatar { width: 32px; height: 32px; }
   }
   main {
     max-width: 480px;
@@ -311,19 +339,26 @@
   <a href="index.html" class="logo-link">
     <img src="logo.png" alt="Freeman Guild" class="logo">
   </a>
-  <nav id="mainNav">
-    <a href="index.html">Home</a>
-    <a href="index.html#about">About</a>
-    <a href="index.html#philosophy">Philosophy</a>
-    <a href="merch.html">Merch</a>
-    <a href="members.html">Members</a>
-    <a href="index.html#contact">Contact</a>
-  </nav>
-  <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
+  <div class="nav-wrap">
+    <nav id="mainNav">
+      <a href="index.html">Home</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#philosophy">Philosophy</a>
+      <a href="merch.html">Merch</a>
+      <a href="members.html">Members</a>
+      <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <a href="members.html" id="headerAvatarLink" class="header-avatar hidden" title="My Profile">
+      <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
+      <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
+    </a>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
 </header>
 <main>
   <div id="loadingView" class="loading">Loading…</div>
@@ -446,6 +481,7 @@ window.__freemanMembersInit = true;
     } else if (event === 'SIGNED_OUT') {
       dashboardView.classList.add('hidden');
       authView.classList.remove('hidden');
+      resetHeaderAuthUI();
     }
   });
   // ---- Google sign-in ----
@@ -521,8 +557,35 @@ window.__freemanMembersInit = true;
     });
     applyMembershipBadge(profile.membership_status);
     applyAvatar(profile.avatar_url, profile.membership_status);
+    applyHeaderAuthUI(profile);
     document.getElementById('unsubscribeBtn').textContent =
       profile.unsubscribed ? 'Resubscribe to Communications' : 'Unsubscribe from Communications';
+  }
+  // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
+  const headerAvatarLink = document.getElementById('headerAvatarLink');
+  const headerAvatarImg = document.getElementById('headerAvatarImg');
+  const headerAvatarPlaceholder = document.getElementById('headerAvatarPlaceholder');
+  const navAdminLink = document.getElementById('navAdminLink');
+  function applyHeaderAuthUI(profile) {
+    if (!profile || !headerAvatarLink) return;
+    headerAvatarLink.classList.toggle('active', profile.membership_status === 'active');
+    headerAvatarLink.classList.remove('hidden');
+    if (profile.avatar_url) {
+      headerAvatarImg.src = profile.avatar_url;
+      headerAvatarImg.classList.remove('hidden');
+      headerAvatarPlaceholder.classList.add('hidden');
+    } else {
+      headerAvatarImg.classList.add('hidden');
+      headerAvatarPlaceholder.classList.remove('hidden');
+      headerAvatarPlaceholder.textContent = (profile.name || profile.email || '?').trim().charAt(0).toUpperCase();
+    }
+    if (navAdminLink) {
+      navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
+    }
+  }
+  function resetHeaderAuthUI() {
+    if (headerAvatarLink) headerAvatarLink.classList.add('hidden');
+    if (navAdminLink) navAdminLink.classList.add('hidden');
   }
   function applyMembershipBadge(membershipStatus) {
     const badge = document.getElementById('membershipBadge');
