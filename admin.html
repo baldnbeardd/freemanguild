@@ -26,7 +26,6 @@
     min-height: 100vh;
   }
   a { color: inherit; text-decoration: none; }
-
   header {
     position: fixed;
     top: 0;
@@ -66,7 +65,6 @@
     transition: width 0.3s;
   }
   header nav a:hover::after { width: 100%; }
-
   .hamburger {
     display: none;
     flex-direction: column;
@@ -90,7 +88,6 @@
   .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
   .hamburger.open span:nth-child(2) { opacity: 0; }
   .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
   @media (max-width: 768px) {
     header { padding: 20px 30px; }
     header.scrolled { padding: 18px 30px; }
@@ -118,13 +115,11 @@
     header.scrolled { padding: 14px 20px; }
     .logo { height: 50px; }
   }
-
   main {
     max-width: 1200px;
     margin: 0 auto;
     padding: 160px 24px 100px;
   }
-
   h1 {
     text-transform: uppercase;
     letter-spacing: 4px;
@@ -133,7 +128,6 @@
     margin-bottom: 40px;
     text-align: center;
   }
-
   .section-title {
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -144,7 +138,6 @@
     margin: 48px 0 24px;
   }
   .section-title:first-of-type { margin-top: 0; }
-
   .loading, .denied {
     text-align: center;
     color: var(--muted);
@@ -162,7 +155,6 @@
     text-transform: none;
     font-size: 13px;
   }
-
   /* Auth view (reused pattern) */
   .authWrap { max-width: 420px; margin: 0 auto; }
   .label {
@@ -212,7 +204,6 @@
   .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
   .divider::before { margin-right: 12px; }
   .divider::after { margin-left: 12px; }
-
   /* Stat cards */
   .stats-grid {
     display: grid;
@@ -239,7 +230,6 @@
   @media (max-width: 700px) {
     .stats-grid { grid-template-columns: 1fr 1fr; }
   }
-
   /* Charts */
   .charts-grid {
     display: grid;
@@ -255,7 +245,32 @@
   @media (max-width: 900px) {
     .charts-grid { grid-template-columns: 1fr; }
   }
-
+  .chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .range-toggle {
+    display: flex;
+    border: 1px solid var(--line);
+  }
+  .range-toggle button {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 10px;
+    border: none;
+    border-right: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+  }
+  .range-toggle button:last-child { border-right: none; }
+  .range-toggle button:hover { background: rgba(255,255,255,0.06); color: var(--fg); }
+  .range-toggle button.active { background: var(--fg); color: var(--bg); }
   /* Member table */
   .table-wrap { overflow-x: auto; border: 1px solid var(--line); }
   table { width: 100%; border-collapse: collapse; min-width: 760px; }
@@ -278,7 +293,6 @@
   td.muted { color: var(--muted); }
   td a { color: var(--accent); border-bottom: 1px solid transparent; }
   td a:hover { border-bottom-color: var(--accent); }
-
   .tag-checks { display: flex; gap: 12px; flex-wrap: wrap; }
   .tag-checks label {
     display: flex;
@@ -291,7 +305,6 @@
     cursor: pointer;
   }
   .tag-checks input { margin: 0; }
-
   select.status-select {
     background: var(--bg);
     color: var(--fg);
@@ -305,7 +318,6 @@
   select.status-select.active { border-color: var(--green); color: var(--green); }
   select.status-select.inactive { border-color: var(--red); color: var(--red); }
   select.status-select.pending { border-color: var(--accent); color: var(--accent); }
-
   .table-status-msg {
     text-align: center;
     font-size: 12px;
@@ -315,12 +327,33 @@
     margin: 12px 0;
   }
   .table-status-msg.error { color: #ff5a5a; }
-
+  .row-actions { display: flex; gap: 8px; }
+  .row-actions button {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .btn-delete { border-color: var(--muted); color: var(--muted); }
+  .btn-delete:hover { background: var(--muted); color: var(--bg); }
+  .btn-blacklist { border-color: var(--red); color: var(--red); }
+  .btn-blacklist:hover { background: var(--red); color: var(--fg); }
+  .btn-unblacklist {
+    width: auto;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 10px;
+    border-color: var(--line);
+    color: var(--muted);
+  }
+  .btn-unblacklist:hover { background: var(--fg); color: var(--bg); }
+  .empty-note { color: var(--muted); font-size: 12px; padding: 16px; text-align: center; }
   .hidden { display: none; }
 </style>
 </head>
 <body>
-
 <header id="siteHeader">
   <a href="index.html" class="logo-link">
     <img src="logo.png" alt="Freeman Guild" class="logo">
@@ -337,11 +370,8 @@
     <span></span><span></span><span></span>
   </button>
 </header>
-
 <main>
-
   <div id="loadingView" class="loading">Loading…</div>
-
   <!-- ===================== LOGGED OUT VIEW ===================== -->
   <div id="authView" class="hidden authWrap">
     <h1>Admin Login</h1>
@@ -354,18 +384,15 @@
     <input type="password" id="authPassword" placeholder="••••••••">
     <button id="signInBtn">Sign In</button>
   </div>
-
   <!-- ===================== NOT AN ADMIN ===================== -->
   <div id="deniedView" class="hidden denied">
     This page is restricted to administrators.
     <br>
     <a href="members.html">Go to Member Dashboard</a>
   </div>
-
   <!-- ===================== ADMIN DASHBOARD ===================== -->
   <div id="dashboardView" class="hidden">
     <h1>Admin Dashboard</h1>
-
     <div class="section-title">Overview</div>
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-number" id="statTotal">—</div><div class="stat-label">Total Members</div></div>
@@ -373,14 +400,21 @@
       <div class="stat-card"><div class="stat-number" id="statFounders">—</div><div class="stat-label">Founders</div></div>
       <div class="stat-card"><div class="stat-number" id="statAdmins">—</div><div class="stat-label">Admins</div></div>
     </div>
-
     <div class="section-title">Usage Metrics</div>
     <div class="charts-grid">
-      <div class="chart-card"><canvas id="signupsChart"></canvas></div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="range-toggle" id="signupsRangeToggle">
+            <button type="button" data-range="7">7D</button>
+            <button type="button" data-range="30">30D</button>
+            <button type="button" data-range="365">1Y</button>
+          </div>
+        </div>
+        <canvas id="signupsChart"></canvas>
+      </div>
       <div class="chart-card"><canvas id="statusChart"></canvas></div>
       <div class="chart-card full"><canvas id="genresChart"></canvas></div>
     </div>
-
     <div class="section-title">Members</div>
     <div id="tableStatus" class="table-status-msg"></div>
     <div class="table-wrap">
@@ -393,16 +427,29 @@
             <th>Joined</th>
             <th>Membership</th>
             <th>Tags</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="memberRows"></tbody>
       </table>
     </div>
-
+    <div class="section-title">Blacklisted Emails</div>
+    <div id="blacklistStatus" class="table-status-msg"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Reason</th>
+            <th>Blacklisted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="blacklistRows"></tbody>
+      </table>
+    </div>
   </div>
-
 </main>
-
 <script>
 if (window.__freemanAdminInit) {
   console.warn('Admin script already initialized — skipping duplicate run.');
@@ -411,29 +458,25 @@ window.__freemanAdminInit = true;
 (function() {
   const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
-
   if (!window.supabase) {
     document.getElementById('loadingView').innerHTML =
       'Could not load required library. Please refresh the page.';
     throw new Error('supabase-js failed to load from CDN');
   }
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
   const ALL_TAGS = ['non-member', 'member', 'founder', 'admin'];
-
   const loadingView = document.getElementById('loadingView');
   const authView = document.getElementById('authView');
   const deniedView = document.getElementById('deniedView');
   const dashboardView = document.getElementById('dashboardView');
   const statusMsg = document.getElementById('statusMsg');
   const tableStatus = document.getElementById('tableStatus');
-
+  const blacklistStatus = document.getElementById('blacklistStatus');
   function showStatus(el, text, isError = false) {
     el.textContent = text;
     el.className = 'table-status-msg' + (isError ? ' error' : '');
     if (text) setTimeout(() => { el.textContent = ''; el.className = 'table-status-msg'; }, 3000);
   }
-
   async function init() {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -449,7 +492,6 @@ window.__freemanAdminInit = true;
       console.error('Admin init failed:', err);
     }
   }
-
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session) {
       authView.classList.add('hidden');
@@ -460,14 +502,12 @@ window.__freemanAdminInit = true;
       authView.classList.remove('hidden');
     }
   });
-
   document.getElementById('googleBtn').addEventListener('click', async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.href }
     });
   });
-
   document.getElementById('signInBtn').addEventListener('click', async () => {
     const email = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
@@ -478,44 +518,51 @@ window.__freemanAdminInit = true;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) showStatus(statusMsg, error.message, true);
   });
-
   async function checkAdminAndLoad(user) {
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('tags')
       .eq('id', user.id)
       .single();
-
     if (error || !profile || !(profile.tags || []).includes('admin')) {
       deniedView.classList.remove('hidden');
       return;
     }
-
     dashboardView.classList.remove('hidden');
     await loadDashboard();
   }
-
   let allMembers = [];
+  let allBlacklisted = [];
   let charts = {};
-
+  let signupsRangeDays = 30;
   async function loadDashboard() {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, name, email, facebook, created_at, membership_status, tags, genres')
       .order('created_at', { ascending: true });
-
     if (error) {
       tableStatus.textContent = 'Could not load members: ' + error.message;
       tableStatus.classList.add('error');
       return;
     }
-
     allMembers = data || [];
     renderStats();
     renderCharts();
     renderTable();
+    await loadBlacklist();
   }
-
+  async function loadBlacklist() {
+    const { data, error } = await supabase
+      .from('blacklisted_emails')
+      .select('email, reason, blacklisted_at')
+      .order('blacklisted_at', { ascending: false });
+    if (error) {
+      showStatus(blacklistStatus, 'Could not load blacklist: ' + error.message, true);
+      return;
+    }
+    allBlacklisted = data || [];
+    renderBlacklist();
+  }
   function renderStats() {
     const total = allMembers.length;
     const active = allMembers.filter(m => m.membership_status === 'active').length;
@@ -526,55 +573,94 @@ window.__freemanAdminInit = true;
     document.getElementById('statFounders').textContent = founders;
     document.getElementById('statAdmins').textContent = admins;
   }
-
+  // Range toggle buttons for the signups chart
+  const signupsRangeToggle = document.getElementById('signupsRangeToggle');
+  function updateRangeToggleUI() {
+    signupsRangeToggle.querySelectorAll('button').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.range) === signupsRangeDays);
+    });
+  }
+  signupsRangeToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-range]');
+    if (!btn) return;
+    signupsRangeDays = Number(btn.dataset.range);
+    updateRangeToggleUI();
+    renderSignupsChart();
+  });
+  updateRangeToggleUI();
+  function dateKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function renderSignupsChart() {
+    const gridColor = 'rgba(255,255,255,0.08)';
+    const days = signupsRangeDays;
+    // Build a zero-filled map for every day in the selected window, ending today.
+    const dayCounts = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      dayCounts[dateKey(d)] = 0;
+    }
+    allMembers.forEach(m => {
+      const d = new Date(m.created_at);
+      d.setHours(0, 0, 0, 0);
+      const key = dateKey(d);
+      if (key in dayCounts) dayCounts[key] += 1;
+    });
+    const labels = Object.keys(dayCounts).map(key => {
+      const [y, mo, da] = key.split('-').map(Number);
+      const d = new Date(y, mo - 1, da);
+      return days > 90
+        ? d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+        : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    const data = Object.values(dayCounts);
+    if (charts.signups) charts.signups.destroy();
+    charts.signups = new Chart(document.getElementById('signupsChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'New Members',
+          data,
+          borderColor: '#4a9eff',
+          backgroundColor: 'rgba(74,158,255,0.15)',
+          tension: 0.3,
+          fill: true,
+          pointRadius: days > 60 ? 0 : 3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'Signups Over Time', color: '#f2f2f2', font: { size: 12 } }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: days > 90 ? 12 : 10 }
+          },
+          y: { grid: { color: gridColor }, beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+  }
   function renderCharts() {
     const gridColor = 'rgba(255,255,255,0.08)';
     const textColor = '#8a8a8a';
     Chart.defaults.color = textColor;
     Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
-
-    // --- Signups over time (by month) ---
-    const monthCounts = {};
-    allMembers.forEach(m => {
-      const d = new Date(m.created_at);
-      const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
-      monthCounts[key] = (monthCounts[key] || 0) + 1;
-    });
-    const monthLabels = Object.keys(monthCounts);
-    const monthData = Object.values(monthCounts);
-
-    if (charts.signups) charts.signups.destroy();
-    charts.signups = new Chart(document.getElementById('signupsChart'), {
-      type: 'line',
-      data: {
-        labels: monthLabels,
-        datasets: [{
-          label: 'New Members',
-          data: monthData,
-          borderColor: '#4a9eff',
-          backgroundColor: 'rgba(74,158,255,0.15)',
-          tension: 0.3,
-          fill: true,
-          pointRadius: 3
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false }, title: { display: true, text: 'Signups Over Time', color: '#f2f2f2', font: { size: 12 } } },
-        scales: {
-          x: { grid: { color: gridColor } },
-          y: { grid: { color: gridColor }, beginAtZero: true, ticks: { precision: 0 } }
-        }
-      }
-    });
-
+    // --- Signups over time (daily, with range toggle) ---
+    renderSignupsChart();
     // --- Membership status breakdown ---
     const statusCounts = { active: 0, pending: 0, inactive: 0 };
     allMembers.forEach(m => {
       const s = m.membership_status || 'inactive';
       statusCounts[s] = (statusCounts[s] || 0) + 1;
     });
-
     if (charts.status) charts.status.destroy();
     charts.status = new Chart(document.getElementById('statusChart'), {
       type: 'doughnut',
@@ -592,13 +678,11 @@ window.__freemanAdminInit = true;
         plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Membership Status', color: '#f2f2f2', font: { size: 12 } } }
       }
     });
-
     // --- Genre popularity ---
     const genreCounts = {};
     allMembers.forEach(m => (m.genres || []).forEach(g => { genreCounts[g] = (genreCounts[g] || 0) + 1; }));
     const genreLabels = Object.keys(genreCounts);
     const genreData = Object.values(genreCounts);
-
     if (charts.genres) charts.genres.destroy();
     charts.genres = new Chart(document.getElementById('genresChart'), {
       type: 'bar',
@@ -620,29 +704,23 @@ window.__freemanAdminInit = true;
       }
     });
   }
-
   function formatDate(iso) {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
-
   function renderTable() {
     const tbody = document.getElementById('memberRows');
     tbody.innerHTML = '';
-
     allMembers.forEach(m => {
       const tr = document.createElement('tr');
-
       const tagChecks = ALL_TAGS.map(tag => {
         const checked = (m.tags || []).includes(tag) ? 'checked' : '';
         return `<label><input type="checkbox" data-id="${m.id}" data-tag="${tag}" ${checked}> ${tag}</label>`;
       }).join('');
-
       const status = m.membership_status || 'inactive';
       const facebookCell = m.facebook
         ? `<a href="${m.facebook.startsWith('http') ? m.facebook : 'https://' + m.facebook}" target="_blank" rel="noopener">${m.facebook}</a>`
         : '<span class="muted">—</span>';
-
       tr.innerHTML = `
         <td>${m.name || '<span class="muted">—</span>'}</td>
         <td class="email">${m.email || '—'}</td>
@@ -656,10 +734,15 @@ window.__freemanAdminInit = true;
           </select>
         </td>
         <td><div class="tag-checks">${tagChecks}</div></td>
+        <td>
+          <div class="row-actions">
+            <button type="button" class="btn-delete" data-id="${m.id}">Delete</button>
+            <button type="button" class="btn-blacklist" data-id="${m.id}" data-email="${m.email || ''}">Blacklist</button>
+          </div>
+        </td>
       `;
       tbody.appendChild(tr);
     });
-
     // Tag checkbox handlers
     tbody.querySelectorAll('input[type=checkbox]').forEach(cb => {
       cb.addEventListener('change', async (e) => {
@@ -668,7 +751,6 @@ window.__freemanAdminInit = true;
         const row = e.target.closest('tr');
         const checks = row.querySelectorAll('input[type=checkbox]');
         const newTags = Array.from(checks).filter(c => c.checked).map(c => c.dataset.tag);
-
         const { error } = await supabase.from('profiles').update({ tags: newTags }).eq('id', id);
         if (error) {
           showStatus(tableStatus, error.message, true);
@@ -676,7 +758,6 @@ window.__freemanAdminInit = true;
           return;
         }
         member.tags = newTags;
-
         // Reflect possible auto-activation from the DB trigger
         const { data: refreshed } = await supabase.from('profiles').select('membership_status').eq('id', id).single();
         if (refreshed) {
@@ -685,13 +766,11 @@ window.__freemanAdminInit = true;
           select.value = refreshed.membership_status;
           select.className = 'status-select ' + refreshed.membership_status;
         }
-
         showStatus(tableStatus, 'Tags updated.');
         renderStats();
         renderCharts();
       });
     });
-
     // Membership status dropdown handlers
     tbody.querySelectorAll('select.status-select').forEach(sel => {
       sel.addEventListener('change', async (e) => {
@@ -710,8 +789,92 @@ window.__freemanAdminInit = true;
         renderCharts();
       });
     });
+    // Delete handlers
+    tbody.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        const member = allMembers.find(m => m.id === id);
+        const label = member ? (member.email || member.name || id) : id;
+        if (!confirm(`Delete ${label}? This removes their profile permanently but does not blacklist their email — they could sign up again.`)) return;
+        const { error } = await supabase.from('profiles').delete().eq('id', id);
+        if (error) {
+          showStatus(tableStatus, error.message, true);
+          return;
+        }
+        allMembers = allMembers.filter(m => m.id !== id);
+        renderStats();
+        renderCharts();
+        renderTable();
+        showStatus(tableStatus, 'Member deleted.');
+      });
+    });
+    // Blacklist handlers
+    tbody.querySelectorAll('.btn-blacklist').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        const email = e.target.dataset.email;
+        if (!email) {
+          showStatus(tableStatus, 'This member has no email on file, cannot blacklist.', true);
+          return;
+        }
+        if (!confirm(`Blacklist ${email}? This deletes their profile and blocks the email from re-registering.`)) return;
+        const reason = prompt('Optional reason (visible only to admins):', '') || null;
+        const { data: { session } } = await supabase.auth.getSession();
+        const { error: insertError } = await supabase.from('blacklisted_emails').insert({
+          email: email.toLowerCase(),
+          reason,
+          blacklisted_by: session ? session.user.id : null
+        });
+        if (insertError) {
+          showStatus(tableStatus, insertError.message, true);
+          return;
+        }
+        const { error: deleteError } = await supabase.from('profiles').delete().eq('id', id);
+        if (deleteError) {
+          showStatus(tableStatus, 'Blacklisted, but could not remove profile: ' + deleteError.message, true);
+        } else {
+          showStatus(tableStatus, 'Member blacklisted and profile removed.');
+        }
+        allMembers = allMembers.filter(m => m.id !== id);
+        renderStats();
+        renderCharts();
+        renderTable();
+        await loadBlacklist();
+      });
+    });
   }
-
+  function renderBlacklist() {
+    const tbody = document.getElementById('blacklistRows');
+    tbody.innerHTML = '';
+    if (!allBlacklisted.length) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-note">No blacklisted emails.</td></tr>`;
+      return;
+    }
+    allBlacklisted.forEach(b => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="email">${b.email}</td>
+        <td class="muted">${b.reason || '—'}</td>
+        <td class="muted">${formatDate(b.blacklisted_at)}</td>
+        <td><button type="button" class="btn-unblacklist" data-email="${b.email}">Remove</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.btn-unblacklist').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const email = e.target.dataset.email;
+        if (!confirm(`Remove ${email} from the blacklist? They will be able to sign up again.`)) return;
+        const { error } = await supabase.from('blacklisted_emails').delete().eq('email', email);
+        if (error) {
+          showStatus(blacklistStatus, error.message, true);
+          return;
+        }
+        allBlacklisted = allBlacklisted.filter(b => b.email !== email);
+        renderBlacklist();
+        showStatus(blacklistStatus, 'Removed from blacklist.');
+      });
+    });
+  }
   // Header scroll + hamburger (same pattern as other pages)
   const siteHeader = document.getElementById('siteHeader');
   window.addEventListener('scroll', () => {
@@ -732,11 +895,9 @@ window.__freemanAdminInit = true;
       hamburger.setAttribute('aria-expanded', 'false');
     });
   });
-
   init();
 })();
 }
 </script>
-
 </body>
 </html>
