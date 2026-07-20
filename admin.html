@@ -751,7 +751,7 @@ window.__freemanAdminInit = true;
     Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
     // --- Signups over time (daily, with range toggle) ---
     renderSignupsChart();
-    // --- Membership status breakdown ---
+    // --- Membership status breakdown (Active vs Inactive; Pending excluded) ---
     const statusCounts = { active: 0, pending: 0, inactive: 0 };
     allMembers.forEach(m => {
       const s = m.membership_status || 'inactive';
@@ -761,10 +761,10 @@ window.__freemanAdminInit = true;
     charts.status = new Chart(document.getElementById('statusChart'), {
       type: 'doughnut',
       data: {
-        labels: ['Active', 'Pending', 'Inactive'],
+        labels: ['Active', 'Inactive'],
         datasets: [{
-          data: [statusCounts.active, statusCounts.pending, statusCounts.inactive],
-          backgroundColor: ['#2ea043', '#4a9eff', '#da3633'],
+          data: [statusCounts.active, statusCounts.inactive],
+          backgroundColor: ['#2ea043', '#da3633'],
           borderColor: '#0a0a0a',
           borderWidth: 2
         }]
