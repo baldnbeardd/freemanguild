@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeman Guild Merch</title>
     <meta name="description" content="Freeman Guild official merchandise — Premium t-shirts featuring the iconic Freeman Guild logo.">
-    
+
     <style>
         * {
             margin: 0;
@@ -52,6 +52,12 @@
             text-decoration: none;
         }
 
+        .nav-wrap {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
         nav {
             display: flex;
             gap: 50px;
@@ -81,6 +87,41 @@
 
         nav a:hover::after {
             width: 100%;
+        }
+
+        .header-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #da3633;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #151515;
+            flex-shrink: 0;
+            transition: border-color 0.3s;
+        }
+
+        .header-avatar.active {
+            border-color: #2ea043;
+        }
+
+        .header-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-avatar-placeholder {
+            font-size: 13px;
+            font-weight: 400;
+            color: #8a8a8a;
+            text-transform: uppercase;
+        }
+
+        .hidden {
+            display: none;
         }
 
         .hamburger {
@@ -348,6 +389,9 @@
             .hamburger {
                 display: flex;
             }
+            .nav-wrap {
+                gap: 18px;
+            }
             nav {
                 position: fixed;
                 top: 0;
@@ -494,6 +538,10 @@
             .logo {
                 height: 45px;
             }
+            .header-avatar {
+                width: 32px;
+                height: 32px;
+            }
             .hero {
                 height: 40vh;
                 margin-top: 55px;
@@ -602,19 +650,26 @@
         <a href="index.html" class="logo-link">
             <img src="logo.png" alt="Freeman Guild" class="logo">
         </a>
-        <nav id="mainNav">
-            <a href="index.html">Home</a>
-            <a href="index.html#about">About</a>
-            <a href="index.html#philosophy">Philosophy</a>
-            <a href="merch.html">Merch</a>
-            <a href="members.html">Members</a>
-            <a href="index.html#contact">Contact</a>
-        </nav>
-        <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
+        <div class="nav-wrap">
+            <nav id="mainNav">
+                <a href="index.html">Home</a>
+                <a href="index.html#about">About</a>
+                <a href="index.html#philosophy">Philosophy</a>
+                <a href="merch.html">Merch</a>
+                <a href="members.html">Members</a>
+                <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
+                <a href="index.html#contact">Contact</a>
+            </nav>
+            <a href="members.html" id="headerAvatarLink" class="header-avatar hidden" title="My Profile">
+                <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
+                <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
+            </a>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
     </header>
 
     <!-- Hero -->
@@ -688,7 +743,7 @@
                 <h3>Freeman Guild</h3>
                 <p>A collective of creators, thinkers, and builders dedicated to meaningful work and conscious collaboration.</p>
             </div>
-            
+
             <div class="footer-section">
                 <h3>Site</h3>
                 <a href="index.html">Home</a>
@@ -696,7 +751,7 @@
                 <a href="index.html#contact">Contact</a>
             </div>
         </div>
-        
+
         <div class="copyright">
             © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.
         </div>
@@ -728,6 +783,59 @@
                 hamburger.setAttribute('aria-expanded', 'false');
             });
         });
+    </script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script>
+        // Header auth widget: shows the logged-in member's avatar (green/red bordered
+        // by membership status) and reveals the Admin nav link for admins. Fails
+        // silently if the library or network is unavailable — this is a public page.
+        if (window.__freemanHeaderAuthInit) {
+            console.warn('Header auth script already initialized — skipping duplicate run.');
+        } else {
+        window.__freemanHeaderAuthInit = true;
+        (function () {
+            const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
+            if (!window.supabase) return;
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const avatarLink = document.getElementById('headerAvatarLink');
+            const avatarImg = document.getElementById('headerAvatarImg');
+            const avatarPlaceholder = document.getElementById('headerAvatarPlaceholder');
+            const navAdminLink = document.getElementById('navAdminLink');
+            function applyHeaderAuthUI(profile) {
+                if (!profile || !avatarLink) return;
+                avatarLink.classList.toggle('active', profile.membership_status === 'active');
+                avatarLink.classList.remove('hidden');
+                if (profile.avatar_url) {
+                    avatarImg.src = profile.avatar_url;
+                    avatarImg.classList.remove('hidden');
+                    avatarPlaceholder.classList.add('hidden');
+                } else {
+                    avatarImg.classList.add('hidden');
+                    avatarPlaceholder.classList.remove('hidden');
+                    avatarPlaceholder.textContent = (profile.name || profile.email || '?').trim().charAt(0).toUpperCase();
+                }
+                if (navAdminLink && (profile.tags || []).includes('admin')) {
+                    navAdminLink.classList.remove('hidden');
+                }
+            }
+            async function loadHeaderAuth() {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) return;
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('name, email, avatar_url, membership_status, tags')
+                        .eq('id', session.user.id)
+                        .single();
+                    applyHeaderAuthUI(profile);
+                } catch (err) {
+                    console.warn('Header auth check failed:', err);
+                }
+            }
+            loadHeaderAuth();
+        })();
+        }
     </script>
 
 </body>
