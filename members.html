@@ -23,7 +23,6 @@
     min-height: 100vh;
   }
   a { color: inherit; text-decoration: none; }
-
   header {
     position: fixed;
     top: 0;
@@ -73,7 +72,6 @@
   header nav a:hover::after {
     width: 100%;
   }
-
   .hamburger {
     display: none;
     flex-direction: column;
@@ -97,7 +95,6 @@
   .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
   .hamburger.open span:nth-child(2) { opacity: 0; }
   .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
   @media (max-width: 768px) {
     header { padding: 20px 30px; }
     header.scrolled { padding: 18px 30px; }
@@ -126,13 +123,11 @@
     .logo { height: 50px; }
     header nav a { font-size: 14px; }
   }
-
   main {
     max-width: 480px;
     margin: 0 auto;
     padding: 160px 24px 100px;
   }
-
   h1 {
     text-transform: uppercase;
     letter-spacing: 4px;
@@ -141,7 +136,6 @@
     margin-bottom: 40px;
     text-align: center;
   }
-
   .label {
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -150,7 +144,6 @@
     display: block;
     margin-bottom: 8px;
   }
-
   input[type=email], input[type=password], input[type=text], input[type=tel] {
     width: 100%;
     background: transparent;
@@ -162,7 +155,6 @@
     margin-bottom: 20px;
   }
   input:focus { outline: none; border-color: var(--fg); }
-
   button, .btn {
     display: block;
     width: 100%;
@@ -179,14 +171,12 @@
     margin-bottom: 12px;
   }
   button:hover, .btn:hover { background: var(--fg); color: var(--bg); }
-
   .btn-google {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
   }
-
   .divider {
     display: flex;
     align-items: center;
@@ -204,7 +194,6 @@
   }
   .divider::before { margin-right: 12px; }
   .divider::after { margin-left: 12px; }
-
   .toggle-link {
     text-align: center;
     font-size: 12px;
@@ -212,7 +201,6 @@
     margin-top: 8px;
   }
   .toggle-link span { color: var(--fg); cursor: pointer; border-bottom: 1px solid var(--fg); }
-
   .genres {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -227,7 +215,6 @@
     letter-spacing: 0.5px;
   }
   .genre-item input { width: auto; margin: 0; }
-
   .section-title {
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -237,7 +224,6 @@
     padding-bottom: 10px;
     margin: 36px 0 20px;
   }
-
   .status-msg {
     text-align: center;
     font-size: 12px;
@@ -248,7 +234,6 @@
   }
   .status-msg.error { color: #ff5a5a; }
   .status-msg.success { color: #2ea043; }
-
   .confirm-notice {
     border: 1px solid var(--accent);
     background: rgba(74, 158, 255, 0.08);
@@ -259,13 +244,11 @@
     margin-bottom: 24px;
   }
   .confirm-notice strong { color: var(--accent); }
-
   .danger {
     border-color: #7a2a2a;
     color: #ff8a8a;
   }
   .danger:hover { background: #7a2a2a; color: var(--fg); }
-
   .membership-badge {
     text-align: center;
     text-transform: uppercase;
@@ -275,8 +258,10 @@
     border: 1px solid var(--line);
     padding: 10px;
     margin-bottom: 24px;
+    transition: color 0.2s, border-color 0.2s;
   }
-
+  .membership-badge.active { color: #2ea043; border-color: #2ea043; }
+  .membership-badge.inactive { color: #da3633; border-color: #da3633; }
   .avatar-section {
     display: flex;
     flex-direction: column;
@@ -317,13 +302,11 @@
     padding-bottom: 2px;
   }
   .avatar-label:hover { color: var(--fg); border-color: var(--fg); }
-
   .hidden { display: none; }
   .loading { text-align: center; color: var(--muted); padding: 60px 0; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; }
 </style>
 </head>
 <body>
-
 <header id="siteHeader">
   <a href="index.html" class="logo-link">
     <img src="logo.png" alt="Freeman Guild" class="logo">
@@ -342,44 +325,29 @@
     <span></span>
   </button>
 </header>
-
 <main>
-
   <div id="loadingView" class="loading">Loading…</div>
-
   <!-- ===================== LOGGED OUT VIEW ===================== -->
   <div id="authView" class="hidden">
     <h1>Member Login</h1>
-
     <div id="confirmNotice" class="confirm-notice hidden"></div>
-
     <button class="btn btn-google" id="googleBtn">Continue with Google</button>
-
     <div class="divider">or</div>
-
     <div id="statusMsg" class="status-msg"></div>
-
     <label class="label" for="authEmail">Email</label>
     <input type="email" id="authEmail" placeholder="you@example.com">
-
     <label class="label" for="authPassword">Password</label>
     <input type="password" id="authPassword" placeholder="••••••••">
-
     <button id="primaryAuthBtn">Sign In</button>
-
     <div class="toggle-link">
       <span id="toggleModeText">Don't have an account? <span id="toggleModeLink">Sign up</span></span>
     </div>
   </div>
-
   <!-- ===================== LOGGED IN VIEW ===================== -->
   <div id="dashboardView" class="hidden">
     <h1>Member Dashboard</h1>
-
     <div class="membership-badge" id="membershipBadge">Membership: Inactive</div>
-
     <div id="saveStatus" class="status-msg"></div>
-
     <div class="avatar-section">
       <div class="avatar-frame" id="avatarFrame" title="Click to upload a profile photo">
         <img id="avatarPreview" class="avatar-img hidden" alt="Profile photo">
@@ -388,51 +356,34 @@
       <label for="avatarInput" class="avatar-label">Change Photo</label>
       <input type="file" id="avatarInput" accept="image/*" class="hidden">
     </div>
-
     <div class="section-title">Contact Info</div>
-
     <label class="label" for="fName">Name</label>
     <input type="text" id="fName">
-
     <label class="label" for="fEmail">Email</label>
     <input type="email" id="fEmail" disabled>
-
     <label class="label" for="fPhone">Phone</label>
     <input type="tel" id="fPhone">
-
     <label class="label" for="fFacebook">Facebook Profile (optional)</label>
     <input type="text" id="fFacebook">
-
     <div class="section-title">Favorite Genres</div>
     <div class="genres" id="genreGrid"></div>
-
     <button id="saveBtn">Save Changes</button>
-
     <div class="section-title">Membership</div>
     <p style="font-size:13px; color:var(--muted); line-height:1.6;">Annual membership purchasing is coming soon.</p>
-
     <div class="section-title">Account</div>
-
     <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:20px;">
       If you signed up via email link, you don't have a password yet — set one below so you can sign in directly next time. Already have one? This updates it.
     </p>
-
     <div id="passwordStatus" class="status-msg"></div>
-
     <label class="label" for="newPassword">New Password</label>
     <input type="password" id="newPassword" placeholder="••••••••">
-
     <label class="label" for="confirmPassword">Confirm New Password</label>
     <input type="password" id="confirmPassword" placeholder="••••••••">
-
     <button id="setPasswordBtn">Set / Update Password</button>
-
     <button id="signOutBtn">Sign Out</button>
     <button id="unsubscribeBtn" class="danger">Unsubscribe from Communications</button>
   </div>
-
 </main>
-
 <script>
 if (window.__freemanMembersInit) {
   console.warn('Member area script already initialized — skipping duplicate run.');
@@ -443,28 +394,22 @@ window.__freemanMembersInit = true;
   const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
   // =========================================
-
   if (!window.supabase) {
     document.getElementById('loadingView').innerHTML =
       'Could not load required library. Please refresh the page. If this keeps happening, contact the site admin.';
     throw new Error('supabase-js failed to load from CDN');
   }
-
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
   const GENRES = [
     'Disco', 'House', 'Techno',
     'Electro', 'Jungle/Drum & Bass', 'Hip Hop'
   ];
-
   let isSignUp = false;
-
   const loadingView = document.getElementById('loadingView');
   const authView = document.getElementById('authView');
   const dashboardView = document.getElementById('dashboardView');
   const statusMsg = document.getElementById('statusMsg');
   const saveStatus = document.getElementById('saveStatus');
-
   // Build genre checkboxes
   const genreGrid = document.getElementById('genreGrid');
   GENRES.forEach(g => {
@@ -474,13 +419,11 @@ window.__freemanMembersInit = true;
     wrap.innerHTML = `<input type="checkbox" id="${id}" value="${g}"> ${g}`;
     genreGrid.appendChild(wrap);
   });
-
   function showStatus(el, text, isError = false, isSuccess = false) {
     el.textContent = text;
     el.className = 'status-msg' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
     if (text) setTimeout(() => { el.textContent = ''; el.className = 'status-msg'; }, 3000);
   }
-
   async function init() {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -496,7 +439,6 @@ window.__freemanMembersInit = true;
       console.error('Member area init failed:', err);
     }
   }
-
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session) {
       authView.classList.add('hidden');
@@ -506,7 +448,6 @@ window.__freemanMembersInit = true;
       authView.classList.remove('hidden');
     }
   });
-
   // ---- Google sign-in ----
   document.getElementById('googleBtn').addEventListener('click', async () => {
     await supabase.auth.signInWithOAuth({
@@ -514,10 +455,8 @@ window.__freemanMembersInit = true;
       options: { redirectTo: window.location.href }
     });
   });
-
   // ---- Email/password toggle ----
   const primaryAuthBtn = document.getElementById('primaryAuthBtn');
-
   function handleToggleClick() {
     isSignUp = !isSignUp;
     primaryAuthBtn.textContent = isSignUp ? 'Sign Up' : 'Sign In';
@@ -528,7 +467,6 @@ window.__freemanMembersInit = true;
     document.getElementById('confirmNotice').classList.add('hidden');
   }
   document.getElementById('toggleModeLink').addEventListener('click', handleToggleClick);
-
   primaryAuthBtn.addEventListener('click', async () => {
     const email = document.getElementById('authEmail').value.trim();
     const password = document.getElementById('authPassword').value;
@@ -560,49 +498,44 @@ window.__freemanMembersInit = true;
       }
     }
   });
-
   // ---- Dashboard ----
   async function loadDashboard(user) {
     dashboardView.classList.remove('hidden');
-
     let { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
-
     if (error || !profile) {
       // fallback in case the trigger hasn't created it yet
       profile = { email: user.email, name: '', phone: '', facebook: '', genres: [], unsubscribed: false, membership_status: 'inactive' };
     }
-
     document.getElementById('fName').value = profile.name || '';
     document.getElementById('fEmail').value = profile.email || user.email;
     document.getElementById('fPhone').value = profile.phone || '';
     document.getElementById('fFacebook').value = profile.facebook || '';
-
     (profile.genres || []).forEach(g => {
       const id = 'genre_' + g.replace(/[^a-z0-9]/gi, '');
       const cb = document.getElementById(id);
       if (cb) cb.checked = true;
     });
-
-    const badge = document.getElementById('membershipBadge');
-    badge.textContent = 'Membership: ' + (profile.membership_status || 'inactive').toUpperCase();
-
+    applyMembershipBadge(profile.membership_status);
     applyAvatar(profile.avatar_url, profile.membership_status);
-
     document.getElementById('unsubscribeBtn').textContent =
       profile.unsubscribed ? 'Resubscribe to Communications' : 'Unsubscribe from Communications';
   }
-
+  function applyMembershipBadge(membershipStatus) {
+    const badge = document.getElementById('membershipBadge');
+    const status = membershipStatus || 'inactive';
+    badge.textContent = 'Membership: ' + status.toUpperCase();
+    badge.classList.remove('active', 'inactive');
+    badge.classList.add(status === 'active' ? 'active' : 'inactive');
+  }
   function applyAvatar(avatarUrl, membershipStatus) {
     const frame = document.getElementById('avatarFrame');
     const img = document.getElementById('avatarPreview');
     const placeholder = document.getElementById('avatarPlaceholderIcon');
-
     frame.style.borderColor = membershipStatus === 'active' ? '#2ea043' : '#da3633';
-
     if (avatarUrl) {
       img.src = avatarUrl;
       img.classList.remove('hidden');
@@ -612,7 +545,6 @@ window.__freemanMembersInit = true;
       placeholder.classList.remove('hidden');
     }
   }
-
   // Resize an image file down to at most maxSize x maxSize (preserving aspect ratio)
   function resizeImageFile(file, maxSize) {
     return new Promise((resolve, reject) => {
@@ -647,37 +579,29 @@ window.__freemanMembersInit = true;
       reader.readAsDataURL(file);
     });
   }
-
   document.getElementById('avatarFrame').addEventListener('click', () => {
     document.getElementById('avatarInput').click();
   });
-
   document.getElementById('avatarInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-
     try {
       showStatus(saveStatus, 'Uploading photo…');
       const blob = await resizeImageFile(file, 200);
       const path = session.user.id + '/avatar.jpg';
-
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
-
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
       const avatarUrl = urlData.publicUrl + '?t=' + Date.now(); // cache-bust so the new photo shows immediately
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: avatarUrl })
         .eq('id', session.user.id);
       if (updateError) throw updateError;
-
       const { data: profile } = await supabase.from('profiles').select('membership_status').eq('id', session.user.id).single();
       applyAvatar(avatarUrl, profile ? profile.membership_status : null);
       showStatus(saveStatus, 'Photo updated.');
@@ -687,28 +611,23 @@ window.__freemanMembersInit = true;
       e.target.value = '';
     }
   });
-
   document.getElementById('saveBtn').addEventListener('click', async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-
     const saveBtn = document.getElementById('saveBtn');
     const originalLabel = saveBtn.textContent;
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
-
     const selectedGenres = GENRES.filter(g => {
       const id = 'genre_' + g.replace(/[^a-z0-9]/gi, '');
       return document.getElementById(id).checked;
     });
-
     const { error } = await supabase.from('profiles').update({
       name: document.getElementById('fName').value.trim(),
       phone: document.getElementById('fPhone').value.trim(),
       facebook: document.getElementById('fFacebook').value.trim(),
       genres: selectedGenres
     }).eq('id', session.user.id);
-
     if (error) {
       showStatus(saveStatus, error.message, true);
       saveBtn.textContent = originalLabel;
@@ -722,12 +641,10 @@ window.__freemanMembersInit = true;
       }, 1500);
     }
   });
-
   document.getElementById('setPasswordBtn').addEventListener('click', async () => {
     const passStatus = document.getElementById('passwordStatus');
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-
     if (!newPassword || newPassword.length < 6) {
       showStatus(passStatus, 'Password must be at least 6 characters.', true);
       return;
@@ -736,17 +653,13 @@ window.__freemanMembersInit = true;
       showStatus(passStatus, 'Passwords do not match.', true);
       return;
     }
-
     const btn = document.getElementById('setPasswordBtn');
     const originalLabel = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Saving…';
-
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-
     btn.disabled = false;
     btn.textContent = originalLabel;
-
     if (error) {
       showStatus(passStatus, error.message, true);
     } else {
@@ -755,14 +668,11 @@ window.__freemanMembersInit = true;
       showStatus(passStatus, '✓ Password set. You can now sign in with email + password.', false, true);
     }
   });
-
   document.getElementById('unsubscribeBtn').addEventListener('click', async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-
     const { data: current } = await supabase.from('profiles').select('unsubscribed').eq('id', session.user.id).single();
     const newVal = !(current && current.unsubscribed);
-
     const { error } = await supabase.from('profiles').update({ unsubscribed: newVal }).eq('id', session.user.id);
     if (error) {
       showStatus(saveStatus, error.message, true);
@@ -771,11 +681,9 @@ window.__freemanMembersInit = true;
       showStatus(saveStatus, newVal ? 'You have been unsubscribed.' : 'You have been resubscribed.');
     }
   });
-
   document.getElementById('signOutBtn').addEventListener('click', async () => {
     await supabase.auth.signOut();
   });
-
   const siteHeader = document.getElementById('siteHeader');
   window.addEventListener('scroll', () => {
     if (window.scrollY > 80) {
@@ -784,7 +692,6 @@ window.__freemanMembersInit = true;
       siteHeader.classList.remove('scrolled');
     }
   });
-
   // Hamburger menu toggle
   const hamburger = document.getElementById('hamburger');
   const mainNav = document.getElementById('mainNav');
@@ -800,11 +707,9 @@ window.__freemanMembersInit = true;
       hamburger.setAttribute('aria-expanded', 'false');
     });
   });
-
   init();
 })();
 }
 </script>
-
 </body>
 </html>
