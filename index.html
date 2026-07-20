@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeman Guild</title>
     <meta name="description" content="Where Craft Meets Consciousness">
-    
+
     <style>
         * {
             margin: 0;
@@ -46,6 +46,12 @@
             opacity: 0.95;
         }
 
+        .nav-wrap {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
         nav {
             display: flex;
             gap: 50px;
@@ -75,6 +81,41 @@
 
         nav a:hover::after {
             width: 100%;
+        }
+
+        .header-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #da3633;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #151515;
+            flex-shrink: 0;
+            transition: border-color 0.3s;
+        }
+
+        .header-avatar.active {
+            border-color: #2ea043;
+        }
+
+        .header-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-avatar-placeholder {
+            font-size: 13px;
+            font-weight: 400;
+            color: #8a8a8a;
+            text-transform: uppercase;
+        }
+
+        .hidden {
+            display: none;
         }
 
         .hamburger {
@@ -146,7 +187,7 @@
             line-height: 1;
             margin-bottom: 40px;
             letter-spacing: -2px;
-            background: 
+            background:
                 radial-gradient(circle 120px at 20% 30%, rgba(255, 255, 255, 0.9) 0%, rgba(74, 158, 255, 0.6) 45%, transparent 70%),
                 radial-gradient(circle 90px at 70% 70%, rgba(100, 180, 255, 0.7) 0%, rgba(74, 158, 255, 0.4) 50%, transparent 75%),
                 #ffffff;
@@ -158,19 +199,19 @@
         }
 
         @keyframes spotlights {
-            0% { 
+            0% {
                 background-position: -50% 0%, 150% 150%, 0 0;
             }
             25% {
                 background-position: 50% 80%, 80% 20%, 0 0;
             }
-            50% { 
+            50% {
                 background-position: 150% 50%, -50% 70%, 0 0;
             }
             75% {
                 background-position: 20% 20%, 100% 100%, 0 0;
             }
-            100% { 
+            100% {
                 background-position: -50% 0%, 150% 150%, 0 0;
             }
         }
@@ -380,6 +421,9 @@
             .hamburger {
                 display: flex;
             }
+            .nav-wrap {
+                gap: 18px;
+            }
             nav {
                 position: fixed;
                 top: 0;
@@ -422,6 +466,10 @@
             }
             .logo {
                 height: 50px;
+            }
+            .header-avatar {
+                width: 32px;
+                height: 32px;
             }
             nav a {
                 font-size: 14px;
@@ -471,19 +519,26 @@
         <a href="#home" class="logo-link">
             <img src="logo.png" alt="Freeman Guild" class="logo">
         </a>
-        <nav id="mainNav">
-            <a href="#home">Home</a>
-            <a href="#about">About</a>
-            <a href="#philosophy">Philosophy</a>
-            <a href="merch.html">Merch</a>
-            <a href="members.html">Members</a>
-            <a href="#contact">Contact</a>
-        </nav>
-        <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
+        <div class="nav-wrap">
+            <nav id="mainNav">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#philosophy">Philosophy</a>
+                <a href="merch.html">Merch</a>
+                <a href="members.html">Members</a>
+                <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <a href="members.html" id="headerAvatarLink" class="header-avatar hidden" title="My Profile">
+                <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
+                <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
+            </a>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
     </header>
 
     <!-- Hero -->
@@ -507,7 +562,7 @@
         </div> -->
 
         <h2 class="section-title">Our Vision</h2>
-        
+
         <p class="about-text">
             The Freeman Guild is a collective dedicated to excellence, authenticity, and the pursuit of meaningful events that transcends the ordinary.
         </p>
@@ -531,7 +586,7 @@
     <!-- Philosophy -->
     <section class="section" id="philosophy">
         <h2 class="section-title">Core Principles</h2>
-        
+
         <div class="principles">
             <div class="principle">
                 <div class="principle-number">01</div>
@@ -542,7 +597,7 @@
                 <div class="principle-number">02</div>
                 <div class="principle-title">Intentionality</div>
                 <div class="principle-desc">Event curation that provides for an experience unlike any other in West Michigan.</div>
-            </div>            
+            </div>
             <div class="principle">
                 <div class="principle-number">03</div>
                 <div class="principle-title">Authenticity</div>
@@ -562,21 +617,21 @@
             <div class="footer-section">
                 <h3>Freeman Guild</h3>
                 <p>A collective dedicated to community, authenticity, and the pursuit of meaningful events that transcends the ordinary.</p>
-                
+
                 <div class="social-links">
                     <a href="https://www.facebook.com/groups/427911264827896" target="_blank">FB</a>
           <!--           <a href="#" target="_blank">IG</a>
                     <a href="#" target="_blank">SC</a>
            -->      </div>
             </div>
-            
+
             <div class="footer-section">
                 <h3>Join</h3>
                 <a href="members.html">Register</a>
             </div>
-            
+
         </div>
-        
+
         <div class="copyright">
             © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.
         </div>
@@ -733,6 +788,59 @@
             }
             animate();
         })();
+    </script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script>
+        // Header auth widget: shows the logged-in member's avatar (green/red bordered
+        // by membership status) and reveals the Admin nav link for admins. Fails
+        // silently if the library or network is unavailable — this is a public page.
+        if (window.__freemanHeaderAuthInit) {
+            console.warn('Header auth script already initialized — skipping duplicate run.');
+        } else {
+        window.__freemanHeaderAuthInit = true;
+        (function () {
+            const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
+            if (!window.supabase) return;
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const avatarLink = document.getElementById('headerAvatarLink');
+            const avatarImg = document.getElementById('headerAvatarImg');
+            const avatarPlaceholder = document.getElementById('headerAvatarPlaceholder');
+            const navAdminLink = document.getElementById('navAdminLink');
+            function applyHeaderAuthUI(profile) {
+                if (!profile || !avatarLink) return;
+                avatarLink.classList.toggle('active', profile.membership_status === 'active');
+                avatarLink.classList.remove('hidden');
+                if (profile.avatar_url) {
+                    avatarImg.src = profile.avatar_url;
+                    avatarImg.classList.remove('hidden');
+                    avatarPlaceholder.classList.add('hidden');
+                } else {
+                    avatarImg.classList.add('hidden');
+                    avatarPlaceholder.classList.remove('hidden');
+                    avatarPlaceholder.textContent = (profile.name || profile.email || '?').trim().charAt(0).toUpperCase();
+                }
+                if (navAdminLink && (profile.tags || []).includes('admin')) {
+                    navAdminLink.classList.remove('hidden');
+                }
+            }
+            async function loadHeaderAuth() {
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) return;
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('name, email, avatar_url, membership_status, tags')
+                        .eq('id', session.user.id)
+                        .single();
+                    applyHeaderAuthUI(profile);
+                } catch (err) {
+                    console.warn('Header auth check failed:', err);
+                }
+            }
+            loadHeaderAuth();
+        })();
+        }
     </script>
 
 </body>
