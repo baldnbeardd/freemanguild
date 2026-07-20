@@ -54,6 +54,7 @@
     display: flex;
     gap: 50px;
   }
+  .header-avatar-wrap { position: relative; }
   .header-avatar {
     width: 38px;
     height: 38px;
@@ -65,6 +66,8 @@
     justify-content: center;
     background: #151515;
     flex-shrink: 0;
+    padding: 0;
+    cursor: pointer;
     transition: border-color 0.3s;
   }
   .header-avatar.active { border-color: #2ea043; }
@@ -75,6 +78,33 @@
     color: var(--muted);
     text-transform: uppercase;
   }
+  .header-avatar-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    min-width: 170px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 6px;
+    z-index: 1200;
+  }
+  .header-avatar-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 10px 12px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .header-avatar-menu-item:hover { background: rgba(255, 255, 255, 0.08); }
   header nav a {
     color: #e0e0e0;
     text-decoration: none;
@@ -347,12 +377,18 @@
       <a href="merch.html">Merch</a>
       <a href="members.html">Members</a>
       <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
-      <a href="index.html#contact">Contact</a>
+      <a href="index.html#contact" class="hidden">Contact</a>
     </nav>
-    <a href="members.html" id="headerAvatarLink" class="header-avatar hidden" title="My Profile">
-      <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
-      <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
-    </a>
+    <div class="header-avatar-wrap" id="headerAvatarWrap">
+      <button type="button" id="headerAvatarBtn" class="header-avatar hidden" aria-haspopup="true" aria-expanded="false" title="Account menu">
+        <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
+        <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
+      </button>
+      <div id="headerAvatarMenu" class="header-avatar-menu hidden">
+        <a href="members.html" class="header-avatar-menu-item">My Profile</a>
+        <button type="button" id="headerLogoutBtn" class="header-avatar-menu-item">Log Out</button>
+      </div>
+    </div>
     <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
       <span></span>
       <span></span>
@@ -562,14 +598,17 @@ window.__freemanMembersInit = true;
       profile.unsubscribed ? 'Resubscribe to Communications' : 'Unsubscribe from Communications';
   }
   // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
-  const headerAvatarLink = document.getElementById('headerAvatarLink');
+  const headerAvatarWrap = document.getElementById('headerAvatarWrap');
+  const headerAvatarBtn = document.getElementById('headerAvatarBtn');
   const headerAvatarImg = document.getElementById('headerAvatarImg');
   const headerAvatarPlaceholder = document.getElementById('headerAvatarPlaceholder');
+  const headerAvatarMenu = document.getElementById('headerAvatarMenu');
+  const headerLogoutBtn = document.getElementById('headerLogoutBtn');
   const navAdminLink = document.getElementById('navAdminLink');
   function applyHeaderAuthUI(profile) {
-    if (!profile || !headerAvatarLink) return;
-    headerAvatarLink.classList.toggle('active', profile.membership_status === 'active');
-    headerAvatarLink.classList.remove('hidden');
+    if (!profile || !headerAvatarBtn) return;
+    headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
+    headerAvatarBtn.classList.remove('hidden');
     if (profile.avatar_url) {
       headerAvatarImg.src = profile.avatar_url;
       headerAvatarImg.classList.remove('hidden');
@@ -584,8 +623,42 @@ window.__freemanMembersInit = true;
     }
   }
   function resetHeaderAuthUI() {
-    if (headerAvatarLink) headerAvatarLink.classList.add('hidden');
+    if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
     if (navAdminLink) navAdminLink.classList.add('hidden');
+    closeHeaderAvatarMenu();
+  }
+  function closeHeaderAvatarMenu() {
+    if (!headerAvatarMenu) return;
+    headerAvatarMenu.classList.add('hidden');
+    if (headerAvatarBtn) headerAvatarBtn.setAttribute('aria-expanded', 'false');
+  }
+  function toggleHeaderAvatarMenu() {
+    if (!headerAvatarMenu) return;
+    const isOpen = !headerAvatarMenu.classList.contains('hidden');
+    if (isOpen) {
+      closeHeaderAvatarMenu();
+    } else {
+      headerAvatarMenu.classList.remove('hidden');
+      headerAvatarBtn.setAttribute('aria-expanded', 'true');
+    }
+  }
+  if (headerAvatarBtn) {
+    headerAvatarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleHeaderAvatarMenu();
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (headerAvatarWrap && !headerAvatarWrap.contains(e.target)) closeHeaderAvatarMenu();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeHeaderAvatarMenu();
+  });
+  if (headerLogoutBtn) {
+    headerLogoutBtn.addEventListener('click', async () => {
+      closeHeaderAvatarMenu();
+      await supabase.auth.signOut();
+    });
   }
   function applyMembershipBadge(membershipStatus) {
     const badge = document.getElementById('membershipBadge');
