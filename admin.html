@@ -350,6 +350,84 @@
   }
   .btn-unblacklist:hover { background: var(--fg); color: var(--bg); }
   .empty-note { color: var(--muted); font-size: 12px; padding: 16px; text-align: center; }
+  tbody tr.member-row { cursor: pointer; }
+  tbody tr.member-row:hover { background: rgba(255,255,255,0.03); }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 24px;
+  }
+  .modal-box {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 28px;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: auto;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .modal-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #151515;
+    border: 2px solid var(--line);
+  }
+  .modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .modal-avatar .avatar-placeholder { font-size: 28px; font-weight: 200; color: var(--muted); }
+  .modal-name {
+    text-align: center;
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .modal-badge {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 10px;
+    margin-bottom: 24px;
+    color: var(--muted);
+  }
+  .modal-badge.active { color: var(--green); }
+  .modal-badge.inactive { color: var(--red); }
+  .modal-field {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .modal-field:last-child { border-bottom: none; }
+  .modal-field-label {
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .modal-field-value { text-align: right; word-break: break-word; }
   .hidden { display: none; }
 </style>
 </head>
@@ -449,6 +527,24 @@
       </table>
     </div>
   </div>
+  <!-- ===================== MEMBER DETAIL MODAL ===================== -->
+  <div id="memberModalOverlay" class="modal-overlay hidden">
+    <div class="modal-box">
+      <button type="button" class="modal-close" id="modalCloseBtn">Close</button>
+      <div class="modal-avatar" id="modalAvatar">
+        <div class="avatar-placeholder">+</div>
+      </div>
+      <div class="modal-name" id="modalName">—</div>
+      <div class="modal-badge" id="modalBadge">Membership: —</div>
+      <div class="modal-field"><span class="modal-field-label">Email</span><span class="modal-field-value" id="modalEmail">—</span></div>
+      <div class="modal-field"><span class="modal-field-label">Phone</span><span class="modal-field-value" id="modalPhone">—</span></div>
+      <div class="modal-field"><span class="modal-field-label">Facebook</span><span class="modal-field-value" id="modalFacebook">—</span></div>
+      <div class="modal-field"><span class="modal-field-label">Genres</span><span class="modal-field-value" id="modalGenres">—</span></div>
+      <div class="modal-field"><span class="modal-field-label">Tags</span><span class="modal-field-value" id="modalTags">—</span></div>
+      <div class="modal-field"><span class="modal-field-label">Joined</span><span class="modal-field-value" id="modalJoined">—</span></div>
+      <div class="modal-field"><span class="modal-field-label">Comms</span><span class="modal-field-value" id="modalUnsubscribed">—</span></div>
+    </div>
+  </div>
 </main>
 <script>
 if (window.__freemanAdminInit) {
@@ -538,7 +634,7 @@ window.__freemanAdminInit = true;
   async function loadDashboard() {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, name, email, facebook, created_at, membership_status, tags, genres')
+      .select('id, name, email, phone, facebook, created_at, membership_status, tags, genres, avatar_url, unsubscribed')
       .order('created_at', { ascending: true });
     if (error) {
       tableStatus.textContent = 'Could not load members: ' + error.message;
@@ -713,6 +809,7 @@ window.__freemanAdminInit = true;
     tbody.innerHTML = '';
     allMembers.forEach(m => {
       const tr = document.createElement('tr');
+      tr.className = 'member-row';
       const tagChecks = ALL_TAGS.map(tag => {
         const checked = (m.tags || []).includes(tag) ? 'checked' : '';
         return `<label><input type="checkbox" data-id="${m.id}" data-tag="${tag}" ${checked}> ${tag}</label>`;
@@ -741,6 +838,12 @@ window.__freemanAdminInit = true;
           </div>
         </td>
       `;
+      tr.addEventListener('click', (e) => {
+        // Ignore clicks on interactive controls inside the row — only open
+        // the profile view when the row itself (name/email/joined/etc) is clicked.
+        if (e.target.closest('input, select, button, a, label')) return;
+        openMemberModal(m);
+      });
       tbody.appendChild(tr);
     });
     // Tag checkbox handlers
@@ -875,6 +978,37 @@ window.__freemanAdminInit = true;
       });
     });
   }
+  // ---- Member detail modal (view-only; no password/auth data shown) ----
+  const memberModalOverlay = document.getElementById('memberModalOverlay');
+  function openMemberModal(member) {
+    document.getElementById('modalName').textContent = member.name || '(no name on file)';
+    const status = member.membership_status || 'inactive';
+    const badge = document.getElementById('modalBadge');
+    badge.textContent = 'Membership: ' + status.toUpperCase();
+    badge.className = 'modal-badge ' + (status === 'active' ? 'active' : 'inactive');
+    document.getElementById('modalEmail').textContent = member.email || '—';
+    document.getElementById('modalPhone').textContent = member.phone || '—';
+    document.getElementById('modalFacebook').textContent = member.facebook || '—';
+    document.getElementById('modalGenres').textContent = (member.genres || []).length ? member.genres.join(', ') : '—';
+    document.getElementById('modalTags').textContent = (member.tags || []).length ? member.tags.join(', ') : '—';
+    document.getElementById('modalJoined').textContent = formatDate(member.created_at);
+    document.getElementById('modalUnsubscribed').textContent = member.unsubscribed ? 'Unsubscribed' : 'Subscribed';
+    const avatarBox = document.getElementById('modalAvatar');
+    avatarBox.innerHTML = member.avatar_url
+      ? `<img src="${member.avatar_url}" alt="Profile photo">`
+      : `<div class="avatar-placeholder">+</div>`;
+    memberModalOverlay.classList.remove('hidden');
+  }
+  function closeMemberModal() {
+    memberModalOverlay.classList.add('hidden');
+  }
+  document.getElementById('modalCloseBtn').addEventListener('click', closeMemberModal);
+  memberModalOverlay.addEventListener('click', (e) => {
+    if (e.target === memberModalOverlay) closeMemberModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMemberModal();
+  });
   // Header scroll + hamburger (same pattern as other pages)
   const siteHeader = document.getElementById('siteHeader');
   window.addEventListener('scroll', () => {
