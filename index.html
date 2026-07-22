@@ -15,7 +15,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://freemanguild.com/fg.jpg" />
     <meta property="fb:app_id" content="1745567779916374" />
-    <meta property="og:image:alt" content="Freeman Guild" />
+
     <style>
         * {
             margin: 0;
@@ -502,6 +502,80 @@
                 gap: 50px;
             }
         }
+
+        /* Flyer popup */
+        .flyer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .flyer-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .flyer-modal {
+            position: relative;
+            max-width: 420px;
+            width: 100%;
+            max-height: 90vh;
+            transform: translateY(20px);
+            transition: transform 0.4s ease;
+        }
+        .flyer-overlay.visible .flyer-modal {
+            transform: translateY(0);
+        }
+        .flyer-link {
+            display: block;
+            cursor: pointer;
+        }
+        .flyer-link img {
+            width: 100%;
+            height: auto;
+            max-height: 90vh;
+            object-fit: contain;
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .flyer-close {
+            position: absolute;
+            top: -18px;
+            right: -18px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .flyer-close:hover {
+            background: #fff;
+            color: #0a0a0a;
+        }
+        @media (max-width: 480px) {
+            .flyer-close {
+                top: -14px;
+                right: -14px;
+                width: 30px;
+                height: 30px;
+                font-size: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -600,6 +674,15 @@
             </div>
         </div>
     </section>
+    <!-- Flyer Popup -->
+    <div class="flyer-overlay" id="flyerOverlay">
+        <div class="flyer-modal">
+            <button type="button" class="flyer-close" id="flyerClose" aria-label="Close">&times;</button>
+            <a href="https://ra.co/events/2471570" target="_blank" rel="noopener" class="flyer-link" id="flyerLink">
+                <img src="birthday-flyer.jpg" alt="Geburtstag — Alles Gute zum Geburtstag, Myles — Sat 07.25.2026, Grand Rapids MI">
+            </a>
+        </div>
+    </div>
     <!-- Footer -->
     <footer id="contact">
         <div class="footer-content">
@@ -659,6 +742,26 @@
                 }
             });
         });
+        // Flyer popup — fires once per session, replaces old signup modal
+        (function () {
+            const overlay = document.getElementById('flyerOverlay');
+            const closeBtn = document.getElementById('flyerClose');
+            if (!overlay || sessionStorage.getItem('flyerPopupShown')) return;
+            setTimeout(() => {
+                overlay.classList.add('visible');
+                sessionStorage.setItem('flyerPopupShown', '1');
+            }, 3000);
+            function closeFlyer() {
+                overlay.classList.remove('visible');
+            }
+            closeBtn.addEventListener('click', closeFlyer);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeFlyer();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeFlyer();
+            });
+        })();
         // Fade-in animations on scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
