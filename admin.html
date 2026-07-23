@@ -722,6 +722,16 @@
       </table>
     </div>
   </div>
+  <!-- ===================== MEMBERSHIP DATE MODAL ===================== -->
+  <div id="membershipDateModalOverlay" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width:360px;">
+      <div class="modal-name" style="margin-bottom:20px;">Set Membership Date</div>
+      <label class="label" for="membershipDateInput">Membership Start Date</label>
+      <input type="date" id="membershipDateInput">
+      <button type="button" id="membershipDateSaveBtn">Save</button>
+      <button type="button" id="membershipDateCancelBtn" style="border-color:var(--muted); color:var(--muted);">Cancel</button>
+    </div>
+  </div>
   <!-- ===================== MEMBER DETAIL MODAL ===================== -->
   <div id="memberModalOverlay" class="modal-overlay hidden">
     <div class="modal-box">
@@ -736,6 +746,7 @@
       <div class="modal-field"><span class="modal-field-label">Facebook</span><span class="modal-field-value" id="modalFacebook">—</span></div>
       <div class="modal-field"><span class="modal-field-label">Genres</span><span class="modal-field-value" id="modalGenres">—</span></div>
       <div class="modal-field"><span class="modal-field-label">Tags</span><span class="modal-field-value" id="modalTags">—</span></div>
+      <div class="modal-field"><span class="modal-field-label">Membership Date</span><span class="modal-field-value" id="modalMembershipDate">—</span></div>
       <div class="modal-field"><span class="modal-field-label">Joined</span><span class="modal-field-value" id="modalJoined">—</span></div>
       <div class="modal-field"><span class="modal-field-label">Comms</span><span class="modal-field-value" id="modalUnsubscribed">—</span></div>
     </div>
@@ -769,6 +780,31 @@ window.__freemanAdminInit = true;
     el.textContent = text;
     el.className = 'table-status-msg' + (isError ? ' error' : '');
     if (text) setTimeout(() => { el.textContent = ''; el.className = 'table-status-msg'; }, 3000);
+  }
+  // Prompts for a membership start date via a small modal. Resolves with the
+  // chosen "YYYY-MM-DD" string, or null if the admin cancels.
+  function promptMembershipDate(existingDate) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('membershipDateModalOverlay');
+      const input = document.getElementById('membershipDateInput');
+      const saveBtn = document.getElementById('membershipDateSaveBtn');
+      const cancelBtn = document.getElementById('membershipDateCancelBtn');
+      input.value = existingDate || new Date().toISOString().slice(0, 10);
+      overlay.classList.remove('hidden');
+      function cleanup(result) {
+        overlay.classList.add('hidden');
+        saveBtn.removeEventListener('click', onSave);
+        cancelBtn.removeEventListener('click', onCancel);
+        overlay.removeEventListener('click', onOverlayClick);
+        resolve(result);
+      }
+      function onSave() { cleanup(input.value || null); }
+      function onCancel() { cleanup(null); }
+      function onOverlayClick(e) { if (e.target === overlay) cleanup(null); }
+      saveBtn.addEventListener('click', onSave);
+      cancelBtn.addEventListener('click', onCancel);
+      overlay.addEventListener('click', onOverlayClick);
+    });
   }
   async function init() {
     try {
@@ -859,6 +895,7 @@ window.__freemanAdminInit = true;
     if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
     if (navAdminLink) navAdminLink.classList.add('hidden');
     if (navEventsLink) navEventsLink.classList.add('hidden');
+    sessionStorage.removeItem('membershipLapseNoticeDismissed');
     closeHeaderAvatarMenu();
   }
   function closeHeaderAvatarMenu() {
@@ -902,7 +939,7 @@ window.__freemanAdminInit = true;
   async function loadDashboard() {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, name, email, phone, facebook, created_at, membership_status, tags, genres, avatar_url, unsubscribed')
+      .select('id, name, email, phone, facebook, created_at, membership_status, membership_date, tags, genres, avatar_url, unsubscribed')
       .order('created_at', { ascending: true });
     if (error) {
       tableStatus.textContent = 'Could not load members: ' + error.message;
@@ -1266,12 +1303,40 @@ window.__freemanAdminInit = true;
       sel.addEventListener('change', async (e) => {
         const id = e.target.dataset.id;
         const newStatus = e.target.value;
+        const member = allMembers.find(m => m.id === id);
+        const previousStatus = member ? (member.membership_status || 'inactive') : 'inactive';
+
+        if (newStatus === 'active') {
+          const chosenDate = await promptMembershipDate(member ? member.membership_date : null);
+          if (!chosenDate) {
+            e.target.value = previousStatus; // cancelled — revert the dropdown
+            return;
+          }
+          const { error } = await supabase.from('profiles')
+            .update({ membership_status: 'active', membership_date: chosenDate })
+            .eq('id', id);
+          if (error) {
+            showStatus(tableStatus, error.message, true);
+            e.target.value = previousStatus;
+            return;
+          }
+          if (member) {
+            member.membership_status = 'active';
+            member.membership_date = chosenDate;
+          }
+          e.target.className = 'status-select active';
+          showStatus(tableStatus, 'Membership activated (date: ' + chosenDate + ').');
+          renderStats();
+          renderCharts();
+          return;
+        }
+
         const { error } = await supabase.from('profiles').update({ membership_status: newStatus }).eq('id', id);
         if (error) {
           showStatus(tableStatus, error.message, true);
+          e.target.value = previousStatus;
           return;
         }
-        const member = allMembers.find(m => m.id === id);
         if (member) member.membership_status = newStatus;
         e.target.className = 'status-select ' + newStatus;
         showStatus(tableStatus, 'Membership status updated.');
@@ -1378,6 +1443,7 @@ window.__freemanAdminInit = true;
     document.getElementById('modalFacebook').textContent = member.facebook || '—';
     document.getElementById('modalGenres').textContent = (member.genres || []).length ? member.genres.join(', ') : '—';
     document.getElementById('modalTags').textContent = (member.tags || []).length ? member.tags.join(', ') : '—';
+    document.getElementById('modalMembershipDate').textContent = member.membership_date ? formatDate(member.membership_date) : '—';
     document.getElementById('modalJoined').textContent = formatDate(member.created_at);
     document.getElementById('modalUnsubscribed').textContent = member.unsubscribed ? 'Unsubscribed' : 'Subscribed';
     const avatarBox = document.getElementById('modalAvatar');
