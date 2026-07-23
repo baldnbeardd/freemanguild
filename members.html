@@ -597,6 +597,45 @@ window.__freemanMembersInit = true;
     applyHeaderAuthUI(profile);
     document.getElementById('unsubscribeBtn').textContent =
       profile.unsubscribed ? 'Resubscribe to Communications' : 'Unsubscribe from Communications';
+    checkMembershipLapseNotice(profile);
+  }
+  // ---- Membership lapse warning: shows once per authenticated session,
+  // only during the 11th month of an active membership (i.e. the last
+  // month before it auto-lapses back to non-member a year after
+  // membership_date). Dismissing it (X) suppresses it until logout/login.
+  function checkMembershipLapseNotice(profile) {
+    if (!profile || profile.membership_status !== 'active' || !profile.membership_date) return;
+    if (sessionStorage.getItem('membershipLapseNoticeDismissed')) return;
+    const start = new Date(profile.membership_date + 'T00:00:00');
+    const lapseDate = new Date(start);
+    lapseDate.setFullYear(lapseDate.getFullYear() + 1);
+    const eleventhMonthStart = new Date(start);
+    eleventhMonthStart.setMonth(eleventhMonthStart.getMonth() + 11);
+    const now = new Date();
+    if (now >= eleventhMonthStart && now < lapseDate) {
+      showMembershipLapseNotice(lapseDate);
+    }
+  }
+  function showMembershipLapseNotice(lapseDate) {
+    if (document.getElementById('lapseNotice')) return;
+    const dateStr = lapseDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const notice = document.createElement('div');
+    notice.id = 'lapseNotice';
+    notice.style.cssText = `
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      border:1px solid var(--accent); background:rgba(74,158,255,0.1);
+      color:var(--fg); font-size:13px; line-height:1.6; padding:14px 16px;
+      margin-bottom:24px;
+    `;
+    notice.innerHTML = `
+      <span>Your membership will lapse on <strong>${dateStr}</strong> if not renewed.</span>
+      <button type="button" id="lapseNoticeClose" style="width:auto; margin:0; padding:4px 10px; font-size:14px;">&times;</button>
+    `;
+    dashboardView.insertBefore(notice, dashboardView.firstChild);
+    document.getElementById('lapseNoticeClose').addEventListener('click', () => {
+      notice.remove();
+      sessionStorage.setItem('membershipLapseNoticeDismissed', '1');
+    });
   }
   // ---- Header avatar + Admin/Events nav links (shared pattern across all site pages) ----
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
@@ -631,6 +670,7 @@ window.__freemanMembersInit = true;
     if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
     if (navAdminLink) navAdminLink.classList.add('hidden');
     if (navEventsLink) navEventsLink.classList.add('hidden');
+    sessionStorage.removeItem('membershipLapseNoticeDismissed');
     closeHeaderAvatarMenu();
   }
   function closeHeaderAvatarMenu() {
