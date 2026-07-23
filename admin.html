@@ -226,7 +226,7 @@
     display: block;
     margin-bottom: 8px;
   }
-  input[type=email], input[type=password] {
+  input[type=email], input[type=password], input[type=text], input[type=date], input[type=url], textarea {
     width: 100%;
     background: transparent;
     border: 1px solid var(--line);
@@ -236,7 +236,8 @@
     font-size: 14px;
     margin-bottom: 20px;
   }
-  input:focus { outline: none; border-color: var(--fg); }
+  textarea { resize: vertical; min-height: 90px; }
+  input:focus, textarea:focus { outline: none; border-color: var(--fg); }
   button {
     display: block;
     width: 100%;
@@ -501,7 +502,21 @@
   }
   .modal-field-value { text-align: right; word-break: break-word; }
   .hidden { display: none; }
-
+  /* Add Event form */
+  .add-event-form {
+    border: 1px solid var(--line);
+    padding: 24px;
+    margin-bottom: 30px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+  }
+  .add-event-form button { width: auto; padding: 12px 30px; margin-top: 6px; }
   /* ---- Responsive: member/blacklist tables become stacked cards below 680px ---- */
   @media (max-width: 680px) {
     .table-wrap { overflow-x: visible; border: none; }
@@ -534,7 +549,6 @@
     td.empty-note::before { content: none; }
     td .tag-checks, td .row-actions { justify-content: flex-end; }
   }
-
   /* ---- Responsive: modal, form controls, action buttons on small screens ---- */
   @media (max-width: 480px) {
     .modal-box { padding: 20px; }
@@ -558,6 +572,7 @@
       <a href="index.html#philosophy">Philosophy</a>
       <a href="merch.html">Merch</a>
       <a href="members.html">Members</a>
+      <a href="events.html" id="navEventsLink" class="hidden">Events</a>
       <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
       <a href="index.html#contact" class="hidden">Contact</a>
     </nav>
@@ -620,6 +635,48 @@
       </div>
       <div class="chart-card"><canvas id="statusChart"></canvas></div>
       <div class="chart-card full"><canvas id="genresChart"></canvas></div>
+    </div>
+    <div class="section-title">Events</div>
+    <div id="eventFormStatus" class="table-status-msg"></div>
+    <div class="add-event-form">
+      <div class="form-row">
+        <div>
+          <label class="label" for="eventTitle">Title</label>
+          <input type="text" id="eventTitle" placeholder="Geburtstag — Alles Gute zum Geburtstag, Myles">
+        </div>
+        <div>
+          <label class="label" for="eventDate">Date</label>
+          <input type="date" id="eventDate">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="label" for="eventFlyer">Flyer filename (uploaded to repo root)</label>
+          <input type="text" id="eventFlyer" placeholder="Geburtstag.jpg">
+        </div>
+        <div>
+          <label class="label" for="eventFacebook">Facebook event link</label>
+          <input type="url" id="eventFacebook" placeholder="https://www.facebook.com/events/...">
+        </div>
+      </div>
+      <label class="label" for="eventDescription">Description</label>
+      <textarea id="eventDescription" placeholder="10PM – 5AM. Secret Location, Grand Rapids MI. 21+ / $20..."></textarea>
+      <button type="button" id="addEventBtn">Add Event</button>
+    </div>
+    <div id="eventsTableStatus" class="table-status-msg"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Date</th>
+            <th>Facebook</th>
+            <th>Added</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="eventRows"></tbody>
+      </table>
     </div>
     <div class="section-title">Members</div>
     <div id="tableStatus" class="table-status-msg"></div>
@@ -696,6 +753,8 @@ window.__freemanAdminInit = true;
   const statusMsg = document.getElementById('statusMsg');
   const tableStatus = document.getElementById('tableStatus');
   const blacklistStatus = document.getElementById('blacklistStatus');
+  const eventFormStatus = document.getElementById('eventFormStatus');
+  const eventsTableStatus = document.getElementById('eventsTableStatus');
   function showStatus(el, text, isError = false) {
     el.textContent = text;
     el.className = 'table-status-msg' + (isError ? ' error' : '');
@@ -757,7 +816,7 @@ window.__freemanAdminInit = true;
     dashboardView.classList.remove('hidden');
     await loadDashboard();
   }
-  // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
+  // ---- Header avatar + Admin/Events nav links (shared pattern across all site pages) ----
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
   const headerAvatarBtn = document.getElementById('headerAvatarBtn');
   const headerAvatarImg = document.getElementById('headerAvatarImg');
@@ -765,6 +824,7 @@ window.__freemanAdminInit = true;
   const headerAvatarMenu = document.getElementById('headerAvatarMenu');
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
   const navAdminLink = document.getElementById('navAdminLink');
+  const navEventsLink = document.getElementById('navEventsLink');
   function applyHeaderAuthUI(profile) {
     if (!profile || !headerAvatarBtn) return;
     headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -781,10 +841,14 @@ window.__freemanAdminInit = true;
     if (navAdminLink) {
       navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
     }
+    if (navEventsLink) {
+      navEventsLink.classList.remove('hidden');
+    }
   }
   function resetHeaderAuthUI() {
     if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
     if (navAdminLink) navAdminLink.classList.add('hidden');
+    if (navEventsLink) navEventsLink.classList.add('hidden');
     closeHeaderAvatarMenu();
   }
   function closeHeaderAvatarMenu() {
@@ -822,6 +886,7 @@ window.__freemanAdminInit = true;
   }
   let allMembers = [];
   let allBlacklisted = [];
+  let allEvents = [];
   let charts = {};
   let signupsRangeDays = 30;
   async function loadDashboard() {
@@ -839,6 +904,7 @@ window.__freemanAdminInit = true;
     renderCharts();
     renderTable();
     await loadBlacklist();
+    await loadEvents();
   }
   async function loadBlacklist() {
     const { data, error } = await supabase
@@ -852,6 +918,91 @@ window.__freemanAdminInit = true;
     allBlacklisted = data || [];
     renderBlacklist();
   }
+  // ---- Events management (admin-only insert/update/delete via RLS policies) ----
+  async function loadEvents() {
+    const { data, error } = await supabase
+      .from('events')
+      .select('id, title, event_date, flyer_url, description, facebook_url, created_at')
+      .order('event_date', { ascending: true });
+    if (error) {
+      showStatus(eventsTableStatus, 'Could not load events: ' + error.message, true);
+      return;
+    }
+    allEvents = data || [];
+    renderEventsTable();
+  }
+  function renderEventsTable() {
+    const tbody = document.getElementById('eventRows');
+    tbody.innerHTML = '';
+    if (!allEvents.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-note">No events yet.</td></tr>`;
+      return;
+    }
+    allEvents.forEach(ev => {
+      const tr = document.createElement('tr');
+      const fbCell = ev.facebook_url
+        ? `<a href="${ev.facebook_url}" target="_blank" rel="noopener">Link</a>`
+        : '<span class="muted">—</span>';
+      tr.innerHTML = `
+        <td data-label="Title">${ev.title}</td>
+        <td class="muted" data-label="Date">${formatDate(ev.event_date)}</td>
+        <td data-label="Facebook">${fbCell}</td>
+        <td class="muted" data-label="Added">${formatDate(ev.created_at)}</td>
+        <td data-label="Actions">
+          <div class="row-actions">
+            <button type="button" class="btn-delete" data-id="${ev.id}">Delete</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        const ev = allEvents.find(x => x.id === id);
+        if (!confirm(`Delete "${ev ? ev.title : id}"? This cannot be undone.`)) return;
+        const { error } = await supabase.from('events').delete().eq('id', id);
+        if (error) {
+          showStatus(eventsTableStatus, error.message, true);
+          return;
+        }
+        allEvents = allEvents.filter(x => x.id !== id);
+        renderEventsTable();
+        showStatus(eventsTableStatus, 'Event deleted.');
+      });
+    });
+  }
+  document.getElementById('addEventBtn').addEventListener('click', async () => {
+    const title = document.getElementById('eventTitle').value.trim();
+    const eventDate = document.getElementById('eventDate').value;
+    const flyer = document.getElementById('eventFlyer').value.trim();
+    const facebookUrl = document.getElementById('eventFacebook').value.trim();
+    const description = document.getElementById('eventDescription').value.trim();
+    if (!title || !eventDate) {
+      showStatus(eventFormStatus, 'Title and date are required.', true);
+      return;
+    }
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.from('events').insert({
+      title,
+      event_date: eventDate,
+      flyer_url: flyer || null,
+      description: description || null,
+      facebook_url: facebookUrl || null,
+      created_by: session ? session.user.id : null
+    });
+    if (error) {
+      showStatus(eventFormStatus, error.message, true);
+      return;
+    }
+    document.getElementById('eventTitle').value = '';
+    document.getElementById('eventDate').value = '';
+    document.getElementById('eventFlyer').value = '';
+    document.getElementById('eventFacebook').value = '';
+    document.getElementById('eventDescription').value = '';
+    showStatus(eventFormStatus, 'Event added.');
+    await loadEvents();
+  });
   function renderStats() {
     const total = allMembers.length;
     const active = allMembers.filter(m => m.membership_status === 'active').length;
