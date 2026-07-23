@@ -659,6 +659,16 @@
           <input type="url" id="eventFacebook" placeholder="https://www.facebook.com/events/...">
         </div>
       </div>
+      <div class="form-row">
+        <div>
+          <label class="label" for="eventExtraLinkUrl">Additional link (tickets, RSVP, etc.)</label>
+          <input type="url" id="eventExtraLinkUrl" placeholder="https://...">
+        </div>
+        <div>
+          <label class="label" for="eventExtraLinkLabel">Button text for that link</label>
+          <input type="text" id="eventExtraLinkLabel" placeholder="Buy Tickets">
+        </div>
+      </div>
       <label class="label" for="eventDescription">Description</label>
       <textarea id="eventDescription" placeholder="10PM – 5AM. Secret Location, Grand Rapids MI. 21+ / $20..."></textarea>
       <button type="button" id="addEventBtn">Add Event</button>
@@ -922,7 +932,7 @@ window.__freemanAdminInit = true;
   async function loadEvents() {
     const { data, error } = await supabase
       .from('events')
-      .select('id, title, event_date, flyer_url, description, facebook_url, created_at')
+      .select('id, title, event_date, flyer_url, description, facebook_url, extra_link_url, extra_link_label, created_at')
       .order('event_date', { ascending: true });
     if (error) {
       showStatus(eventsTableStatus, 'Could not load events: ' + error.message, true);
@@ -979,6 +989,8 @@ window.__freemanAdminInit = true;
     const fileInput = document.getElementById('eventFlyerFile');
     const file = fileInput.files[0];
     const facebookUrl = document.getElementById('eventFacebook').value.trim();
+    const extraLinkUrl = document.getElementById('eventExtraLinkUrl').value.trim();
+    const extraLinkLabel = document.getElementById('eventExtraLinkLabel').value.trim();
     const description = document.getElementById('eventDescription').value.trim();
     if (!title || !eventDate) {
       showStatus(eventFormStatus, 'Title and date are required.', true);
@@ -1012,6 +1024,8 @@ window.__freemanAdminInit = true;
         flyer_url: flyerUrl,
         description: description || null,
         facebook_url: facebookUrl || null,
+        extra_link_url: extraLinkUrl || null,
+        extra_link_label: extraLinkUrl ? (extraLinkLabel || 'More Info') : null,
         created_by: session ? session.user.id : null
       });
       if (error) {
@@ -1022,6 +1036,8 @@ window.__freemanAdminInit = true;
       document.getElementById('eventDate').value = '';
       fileInput.value = '';
       document.getElementById('eventFacebook').value = '';
+      document.getElementById('eventExtraLinkUrl').value = '';
+      document.getElementById('eventExtraLinkLabel').value = '';
       document.getElementById('eventDescription').value = '';
       showStatus(eventFormStatus, 'Event added.');
       await loadEvents();
