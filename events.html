@@ -565,6 +565,7 @@
             headerLogoutBtn.addEventListener('click', async () => {
                 closeHeaderAvatarMenu();
                 await supabase.auth.signOut();
+                sessionStorage.removeItem('membershipLapseNoticeDismissed');
                 window.location.href = 'members.html';
             });
         }
