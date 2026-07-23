@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events — Freeman Guild</title>
+    <meta name="description" content="Upcoming Freeman Guild events">
+    <meta name="robots" content="noindex">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        /* Hide everything until auth check resolves, to avoid a content flash */
+        body.auth-pending #pageContent {
+            display: none;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .logo {
+            height: 60px;
+            width: auto;
+            opacity: 0.95;
+        }
+        .nav-wrap {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+        nav {
+            display: flex;
+            gap: 50px;
+        }
+        nav a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #fff;
+            transition: width 0.3s;
+        }
+        nav a:hover::after {
+            width: 100%;
+        }
+        .hidden {
+            display: none;
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 30px;
+            height: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1100;
+        }
+        .hamburger span {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        main {
+            padding: 160px 60px 100px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .page-title {
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 200;
+            letter-spacing: -1px;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        /* Next event highlight */
+        .next-event {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 40px;
+            margin-bottom: 70px;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        .next-event-label {
+            font-size: 11px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #da3633;
+            margin-bottom: 14px;
+        }
+        .next-event img {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+        .next-event h2 {
+            font-size: clamp(24px, 3vw, 34px);
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        .next-event .event-date {
+            opacity: 0.6;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        /* View toggle */
+        .view-toggle {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 50px;
+        }
+        .view-toggle button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            padding: 10px 28px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .view-toggle button.active,
+        .view-toggle button:hover {
+            background: #fff;
+            color: #0a0a0a;
+            border-color: #fff;
+        }
+        /* List view */
+        .event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .event-row {
+            background: #0a0a0a;
+            padding: 26px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .event-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .event-row-title {
+            font-size: 18px;
+            font-weight: 300;
+        }
+        .event-row-date {
+            font-size: 13px;
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .event-detail {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0 30px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+        }
+        .event-detail.open {
+            padding: 30px;
+            max-height: 900px;
+        }
+        .event-detail-inner {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 40px;
+        }
+        .event-detail img {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .event-detail p {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+        .fb-link {
+            display: inline-block;
+            padding: 12px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            text-decoration: none;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        .fb-link:hover {
+            background: #fff;
+            color: #0a0a0a;
+        }
+        /* Calendar view */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .calendar-nav button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .calendar-nav button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .calendar-month-label {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.8;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .calendar-dow {
+            background: #0a0a0a;
+            padding: 10px;
+            text-align: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.4;
+        }
+        .calendar-day {
+            background: #0a0a0a;
+            min-height: 90px;
+            padding: 8px;
+            font-size: 13px;
+            opacity: 0.35;
+            position: relative;
+        }
+        .calendar-day.in-month {
+            opacity: 1;
+        }
+        .calendar-day.has-event {
+            cursor: pointer;
+            background: rgba(218, 54, 51, 0.08);
+        }
+        .calendar-day.has-event:hover {
+            background: rgba(218, 54, 51, 0.18);
+        }
+        .calendar-day-num {
+            font-size: 13px;
+        }
+        .calendar-day-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #da3633;
+            margin-top: 6px;
+        }
+        .calendar-day-title {
+            font-size: 10px;
+            margin-top: 4px;
+            line-height: 1.3;
+            opacity: 0.8;
+        }
+        #calendarDetail {
+            margin-top: 40px;
+        }
+        .empty-state {
+            text-align: center;
+            opacity: 0.5;
+            padding: 60px 0;
+        }
+        @media (max-width: 768px) {
+            header { padding: 20px 30px; }
+            main { padding: 140px 20px 80px; }
+            .next-event, .event-detail-inner {
+                grid-template-columns: 1fr;
+            }
+            .hamburger { display: flex; }
+            .nav-wrap { gap: 18px; }
+            nav {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                height: 100vh;
+                width: min(75vw, 320px);
+                background: rgba(10, 10, 10, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 36px;
+                transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                border-left: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            nav.open { right: 0; }
+            nav a { font-size: 15px; }
+            .calendar-day { min-height: 60px; }
+            .calendar-day-title { display: none; }
+        }
+    </style>
+</head>
+<body class="auth-pending">
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="logo.png" alt="Freeman Guild" class="logo">
+        </a>
+        <div class="nav-wrap">
+            <nav id="mainNav">
+                <a href="index.html">Home</a>
+                <a href="merch.html">Merch</a>
+                <a href="members.html">Members</a>
+                <a href="events.html">Events</a>
+            </nav>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <div id="pageContent">
+        <main>
+            <h1 class="page-title">Events</h1>
+
+            <div id="nextEventWrap"></div>
+
+            <div class="view-toggle">
+                <button id="listViewBtn" class="active">List</button>
+                <button id="calendarViewBtn">Calendar</button>
+            </div>
+
+            <div id="listView"></div>
+
+            <div id="calendarView" class="hidden">
+                <div class="calendar-nav">
+                    <button id="prevMonth">&larr;</button>
+                    <div class="calendar-month-label" id="calendarMonthLabel"></div>
+                    <button id="nextMonth">&rarr;</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+                <div id="calendarDetail"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script>
+        // Events are managed by admins on admin.html and stored in Supabase —
+        // this page only reads them, it never writes.
+        const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        (async function gate() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    window.location.href = 'members.html';
+                    return;
+                }
+            } catch (err) {
+                console.warn('Auth check failed, redirecting:', err);
+                window.location.href = 'members.html';
+                return;
+            }
+            document.body.classList.remove('auth-pending');
+            await initEventsPage();
+        })();
+
+        async function fetchEvents() {
+            const { data, error } = await supabase
+                .from('events')
+                .select('title, event_date, flyer_url, description, facebook_url')
+                .order('event_date', { ascending: true });
+            if (error) {
+                console.warn('Could not load events:', error);
+                return [];
+            }
+            return (data || []).map(e => ({
+                title: e.title,
+                date: e.event_date,
+                flyer: e.flyer_url,
+                description: e.description || '',
+                facebookUrl: e.facebook_url || ''
+            }));
+        }
+
+        // ---- Page logic (only runs after auth confirmed) ----
+        async function initEventsPage() {
+            const events = await fetchEvents();
+            const sorted = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const upcoming = sorted.filter(e => new Date(e.date + 'T23:59:59') >= today);
+            const nextEvent = upcoming[0] || sorted[sorted.length - 1];
+
+            renderNextEvent(nextEvent);
+            renderListView(sorted);
+            initCalendar(sorted);
+            initViewToggle();
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function fbLinkHtml(url) {
+            if (!url) return '';
+            return `<a href="${url}" target="_blank" rel="noopener" class="fb-link">View on Facebook</a>`;
+        }
+
+        function renderNextEvent(event) {
+            const wrap = document.getElementById('nextEventWrap');
+            if (!event) {
+                wrap.innerHTML = '';
+                return;
+            }
+            wrap.innerHTML = `
+                <div class="next-event">
+                    <img src="${event.flyer}" alt="${event.title}" onclick="document.getElementById('listViewBtn').click(); toggleEventRow('${event.date}')">
+                    <div>
+                        <div class="next-event-label">Next Event</div>
+                        <h2>${event.title}</h2>
+                        <div class="event-date">${formatDate(event.date)}</div>
+                        <p>${event.description}</p>
+                        ${fbLinkHtml(event.facebookUrl)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderListView(events) {
+            const listView = document.getElementById('listView');
+            if (!events.length) {
+                listView.innerHTML = '<div class="empty-state">No events posted yet.</div>';
+                return;
+            }
+            listView.innerHTML = `<div class="event-list">${events.map(e => `
+                <div>
+                    <div class="event-row" onclick="toggleEventRow('${e.date}')">
+                        <div class="event-row-title">${e.title}</div>
+                        <div class="event-row-date">${formatDate(e.date)}</div>
+                    </div>
+                    <div class="event-detail" id="detail-${e.date}">
+                        <div class="event-detail-inner">
+                            <img src="${e.flyer}" alt="${e.title}">
+                            <div>
+                                <p>${e.description}</p>
+                                ${fbLinkHtml(e.facebookUrl)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}</div>`;
+        }
+
+        function toggleEventRow(dateKey) {
+            const detail = document.getElementById(`detail-${dateKey}`);
+            if (!detail) return;
+            const isOpen = detail.classList.contains('open');
+            document.querySelectorAll('.event-detail.open').forEach(d => d.classList.remove('open'));
+            if (!isOpen) {
+                detail.classList.add('open');
+                detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function initViewToggle() {
+            const listBtn = document.getElementById('listViewBtn');
+            const calBtn = document.getElementById('calendarViewBtn');
+            const listView = document.getElementById('listView');
+            const calView = document.getElementById('calendarView');
+            listBtn.addEventListener('click', () => {
+                listBtn.classList.add('active');
+                calBtn.classList.remove('active');
+                listView.classList.remove('hidden');
+                calView.classList.add('hidden');
+            });
+            calBtn.addEventListener('click', () => {
+                calBtn.classList.add('active');
+                listBtn.classList.remove('active');
+                calView.classList.remove('hidden');
+                listView.classList.add('hidden');
+            });
+        }
+
+        function initCalendar(events) {
+            const eventsByDate = {};
+            events.forEach(e => { eventsByDate[e.date] = e; });
+
+            let current = new Date();
+            current.setDate(1);
+
+            const grid = document.getElementById('calendarGrid');
+            const monthLabel = document.getElementById('calendarMonthLabel');
+            const detailWrap = document.getElementById('calendarDetail');
+
+            function pad(n) { return String(n).padStart(2, '0'); }
+
+            function render() {
+                monthLabel.textContent = current.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                const year = current.getFullYear();
+                const month = current.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const startOffset = firstDay.getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+                    .map(d => `<div class="calendar-dow">${d}</div>`).join('');
+
+                for (let i = 0; i < startOffset; i++) {
+                    cells += `<div class="calendar-day"></div>`;
+                }
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateKey = `${year}-${pad(month + 1)}-${pad(day)}`;
+                    const ev = eventsByDate[dateKey];
+                    if (ev) {
+                        cells += `
+                            <div class="calendar-day in-month has-event" onclick="showCalendarDetail('${dateKey}')">
+                                <div class="calendar-day-num">${day}</div>
+                                <div class="calendar-day-dot"></div>
+                                <div class="calendar-day-title">${ev.title}</div>
+                            </div>
+                        `;
+                    } else {
+                        cells += `<div class="calendar-day in-month"><div class="calendar-day-num">${day}</div></div>`;
+                    }
+                }
+                grid.innerHTML = cells;
+            }
+
+            window.showCalendarDetail = function (dateKey) {
+                const ev = eventsByDate[dateKey];
+                if (!ev) { detailWrap.innerHTML = ''; return; }
+                detailWrap.innerHTML = `
+                    <div class="event-detail open" style="padding:30px;">
+                        <div class="event-detail-inner">
+                            <img src="${ev.flyer}" alt="${ev.title}">
+                            <div>
+                                <h2 style="font-weight:300; margin-bottom:8px;">${ev.title}</h2>
+                                <div class="event-date" style="margin-bottom:16px; opacity:0.6; text-transform:uppercase; font-size:13px; letter-spacing:1px;">${formatDate(ev.date)}</div>
+                                <p>${ev.description}</p>
+                                ${fbLinkHtml(ev.facebookUrl)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                detailWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                current.setMonth(current.getMonth() - 1);
+                render();
+            });
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                current.setMonth(current.getMonth() + 1);
+                render();
+            });
+
+            render();
+        }
+
+        // Hamburger menu toggle
+        const hamburger = document.getElementById('hamburger');
+        const mainNav = document.getElementById('mainNav');
+        hamburger.addEventListener('click', () => {
+            const isOpen = mainNav.classList.toggle('open');
+            hamburger.classList.toggle('open', isOpen);
+            hamburger.setAttribute('aria-expanded', isOpen);
+        });
+        mainNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mainNav.classList.remove('open');
+                hamburger.classList.remove('open');
+                hamburger.setAttribute('aria-expanded', 'false');
+            });
+        });
+    </script>
+</body>
+</html>
