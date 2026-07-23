@@ -806,6 +806,7 @@
                 if (avatarBtn) avatarBtn.classList.add('hidden');
                 if (navAdminLink) navAdminLink.classList.add('hidden');
                 if (navEventsLink) navEventsLink.classList.add('hidden');
+                sessionStorage.removeItem('membershipLapseNoticeDismissed');
                 closeAvatarMenu();
             }
             function closeAvatarMenu() {
