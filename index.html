@@ -959,6 +959,7 @@
                 if (avatarBtn) avatarBtn.classList.add('hidden');
                 if (navAdminLink) navAdminLink.classList.add('hidden');
                 if (navEventsLink) navEventsLink.classList.add('hidden');
+                sessionStorage.removeItem('membershipLapseNoticeDismissed');
                 const upcomingSection = document.getElementById('upcomingEventSection');
                 if (upcomingSection) upcomingSection.classList.add('hidden');
                 closeAvatarMenu();
