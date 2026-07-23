@@ -261,6 +261,49 @@
             color: #0a0a0a;
             border-color: #fff;
         }
+        .upcoming-event-card {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 40px;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .upcoming-event-card img {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .upcoming-event-card h3 {
+            font-size: clamp(22px, 3vw, 32px);
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        .upcoming-event-card .event-date {
+            opacity: 0.6;
+            font-size: 14px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .upcoming-event-card p {
+            font-size: 14px;
+            opacity: 0.7;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        .upcoming-event-card .cta-button {
+            margin-right: 14px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .upcoming-event-card {
+                grid-template-columns: 1fr;
+                padding: 30px;
+            }
+        }
         .section {
             padding: 150px 60px;
             position: relative;
@@ -591,6 +634,7 @@
                 <a href="#philosophy">Philosophy</a>
                 <a href="merch.html">Merch</a>
                 <a href="members.html">Members</a>
+                <a href="events.html" id="navEventsLink" class="hidden">Events</a>
                 <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
                 <a href="#contact" class="hidden">Contact</a>
             </nav>
@@ -623,6 +667,11 @@
             <p>WHERE CRAFT MEETS CONSCIOUSNESS</p>
             <a href="#about" class="cta-button">Explore</a>
         </div>
+    </section>
+    <!-- Upcoming Event (members only — populated by JS when logged in) -->
+    <section class="section hidden" id="upcomingEventSection" style="padding-top:0;">
+        <h2 class="section-title" style="margin-bottom:50px;">Upcoming Event</h2>
+        <div id="upcomingEventWrap"></div>
     </section>
     <!-- About / Vision -->
     <section class="section" id="about">
@@ -885,6 +934,7 @@
             const avatarMenu = document.getElementById('headerAvatarMenu');
             const logoutBtn = document.getElementById('headerLogoutBtn');
             const navAdminLink = document.getElementById('navAdminLink');
+            const navEventsLink = document.getElementById('navEventsLink');
             function applyHeaderAuthUI(profile) {
                 if (!profile || !avatarBtn) return;
                 avatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -901,10 +951,16 @@
                 if (navAdminLink) {
                     navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
                 }
+                if (navEventsLink) {
+                    navEventsLink.classList.remove('hidden');
+                }
             }
             function resetHeaderAuthUI() {
                 if (avatarBtn) avatarBtn.classList.add('hidden');
                 if (navAdminLink) navAdminLink.classList.add('hidden');
+                if (navEventsLink) navEventsLink.classList.add('hidden');
+                const upcomingSection = document.getElementById('upcomingEventSection');
+                if (upcomingSection) upcomingSection.classList.add('hidden');
                 closeAvatarMenu();
             }
             function closeAvatarMenu() {
@@ -941,6 +997,49 @@
                     resetHeaderAuthUI();
                 });
             }
+            function formatUpcomingEventDate(dateStr) {
+                const d = new Date(dateStr + 'T00:00:00');
+                return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            }
+            async function loadUpcomingEvent() {
+                try {
+                    const { data, error } = await supabase
+                        .from('events')
+                        .select('title, event_date, flyer_url, description, facebook_url, extra_link_url, extra_link_label')
+                        .order('event_date', { ascending: true });
+                    if (error || !data || !data.length) return;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const upcoming = data.filter(e => new Date(e.event_date + 'T23:59:59') >= today);
+                    const next = upcoming[0];
+                    if (!next) return;
+                    const section = document.getElementById('upcomingEventSection');
+                    const wrap = document.getElementById('upcomingEventWrap');
+                    if (!section || !wrap) return;
+                    const fbLink = next.facebook_url
+                        ? `<a href="${next.facebook_url}" target="_blank" rel="noopener" class="cta-button">View on Facebook</a>`
+                        : '';
+                    const extraLink = next.extra_link_url
+                        ? `<a href="${next.extra_link_url}" target="_blank" rel="noopener" class="cta-button">${next.extra_link_label || 'More Info'}</a>`
+                        : '';
+                    wrap.innerHTML = `
+                        <div class="upcoming-event-card">
+                            ${next.flyer_url ? `<img src="${next.flyer_url}" alt="${next.title}">` : ''}
+                            <div>
+                                <h3>${next.title}</h3>
+                                <div class="event-date">${formatUpcomingEventDate(next.event_date)}</div>
+                                <p>${next.description || ''}</p>
+                                <a href="events.html" class="cta-button">View All Events</a>
+                                ${fbLink}
+                                ${extraLink}
+                            </div>
+                        </div>
+                    `;
+                    section.classList.remove('hidden');
+                } catch (err) {
+                    console.warn('Could not load upcoming event:', err);
+                }
+            }
             async function loadHeaderAuth() {
                 try {
                     const { data: { session } } = await supabase.auth.getSession();
@@ -951,6 +1050,7 @@
                         .eq('id', session.user.id)
                         .single();
                     applyHeaderAuthUI(profile);
+                    await loadUpcomingEvent();
                 } catch (err) {
                     console.warn('Header auth check failed:', err);
                 }
