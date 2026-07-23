@@ -76,6 +76,67 @@
         .hidden {
             display: none;
         }
+        .header-avatar-wrap {
+            position: relative;
+        }
+        .header-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #da3633;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #151515;
+            flex-shrink: 0;
+            padding: 0;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .header-avatar.active {
+            border-color: #2ea043;
+        }
+        .header-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .header-avatar-placeholder {
+            font-size: 13px;
+            font-weight: 400;
+            color: #8a8a8a;
+            text-transform: uppercase;
+        }
+        .header-avatar-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 170px;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px;
+            z-index: 1200;
+        }
+        .header-avatar-menu-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 10px 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .header-avatar-menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
         .hamburger {
             display: none;
             flex-direction: column;
@@ -360,10 +421,24 @@
         <div class="nav-wrap">
             <nav id="mainNav">
                 <a href="index.html">Home</a>
+                <a href="index.html#about">About</a>
+                <a href="index.html#philosophy">Philosophy</a>
                 <a href="merch.html">Merch</a>
                 <a href="members.html">Members</a>
                 <a href="events.html">Events</a>
+                <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
+                <a href="index.html#contact" class="hidden">Contact</a>
             </nav>
+            <div class="header-avatar-wrap" id="headerAvatarWrap">
+                <button type="button" id="headerAvatarBtn" class="header-avatar hidden" aria-haspopup="true" aria-expanded="false" title="Account menu">
+                    <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
+                    <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
+                </button>
+                <div id="headerAvatarMenu" class="header-avatar-menu hidden">
+                    <a href="members.html" class="header-avatar-menu-item">My Profile</a>
+                    <button type="button" id="headerLogoutBtn" class="header-avatar-menu-item">Log Out</button>
+                </div>
+            </div>
             <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
                 <span></span>
                 <span></span>
@@ -406,8 +481,9 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         (async function gate() {
+            let session;
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                ({ data: { session } } = await supabase.auth.getSession());
                 if (!session) {
                     window.location.href = 'members.html';
                     return;
@@ -418,8 +494,80 @@
                 return;
             }
             document.body.classList.remove('auth-pending');
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('name, email, avatar_url, membership_status, tags')
+                    .eq('id', session.user.id)
+                    .single();
+                if (profile) applyHeaderAuthUI(profile);
+            } catch (err) {
+                console.warn('Header auth check failed:', err);
+            }
             await initEventsPage();
         })();
+
+        // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
+        const headerAvatarWrap = document.getElementById('headerAvatarWrap');
+        const headerAvatarBtn = document.getElementById('headerAvatarBtn');
+        const headerAvatarImg = document.getElementById('headerAvatarImg');
+        const headerAvatarPlaceholder = document.getElementById('headerAvatarPlaceholder');
+        const headerAvatarMenu = document.getElementById('headerAvatarMenu');
+        const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+        const navAdminLink = document.getElementById('navAdminLink');
+
+        function applyHeaderAuthUI(profile) {
+            if (!profile || !headerAvatarBtn) return;
+            headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
+            headerAvatarBtn.classList.remove('hidden');
+            if (profile.avatar_url) {
+                headerAvatarImg.src = profile.avatar_url;
+                headerAvatarImg.classList.remove('hidden');
+                headerAvatarPlaceholder.classList.add('hidden');
+            } else {
+                headerAvatarImg.classList.add('hidden');
+                headerAvatarPlaceholder.classList.remove('hidden');
+                headerAvatarPlaceholder.textContent = (profile.name || profile.email || '?').trim().charAt(0).toUpperCase();
+            }
+            if (navAdminLink) {
+                navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
+            }
+        }
+
+        function closeHeaderAvatarMenu() {
+            if (!headerAvatarMenu) return;
+            headerAvatarMenu.classList.add('hidden');
+            if (headerAvatarBtn) headerAvatarBtn.setAttribute('aria-expanded', 'false');
+        }
+        function toggleHeaderAvatarMenu() {
+            if (!headerAvatarMenu) return;
+            const isOpen = !headerAvatarMenu.classList.contains('hidden');
+            if (isOpen) {
+                closeHeaderAvatarMenu();
+            } else {
+                headerAvatarMenu.classList.remove('hidden');
+                headerAvatarBtn.setAttribute('aria-expanded', 'true');
+            }
+        }
+        if (headerAvatarBtn) {
+            headerAvatarBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleHeaderAvatarMenu();
+            });
+        }
+        document.addEventListener('click', (e) => {
+            if (headerAvatarWrap && !headerAvatarWrap.contains(e.target)) closeHeaderAvatarMenu();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeHeaderAvatarMenu();
+        });
+        if (headerLogoutBtn) {
+            headerLogoutBtn.addEventListener('click', async () => {
+                closeHeaderAvatarMenu();
+                await supabase.auth.signOut();
+                window.location.href = 'members.html';
+            });
+        }
 
         async function fetchEvents() {
             const { data, error } = await supabase
