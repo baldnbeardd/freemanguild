@@ -376,6 +376,7 @@
       <a href="index.html#philosophy">Philosophy</a>
       <a href="merch.html">Merch</a>
       <a href="members.html">Members</a>
+      <a href="events.html" id="navEventsLink" class="hidden">Events</a>
       <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
       <a href="index.html#contact" class="hidden">Contact</a>
     </nav>
@@ -597,7 +598,7 @@ window.__freemanMembersInit = true;
     document.getElementById('unsubscribeBtn').textContent =
       profile.unsubscribed ? 'Resubscribe to Communications' : 'Unsubscribe from Communications';
   }
-  // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
+  // ---- Header avatar + Admin/Events nav links (shared pattern across all site pages) ----
   const headerAvatarWrap = document.getElementById('headerAvatarWrap');
   const headerAvatarBtn = document.getElementById('headerAvatarBtn');
   const headerAvatarImg = document.getElementById('headerAvatarImg');
@@ -605,6 +606,7 @@ window.__freemanMembersInit = true;
   const headerAvatarMenu = document.getElementById('headerAvatarMenu');
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
   const navAdminLink = document.getElementById('navAdminLink');
+  const navEventsLink = document.getElementById('navEventsLink');
   function applyHeaderAuthUI(profile) {
     if (!profile || !headerAvatarBtn) return;
     headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -621,10 +623,14 @@ window.__freemanMembersInit = true;
     if (navAdminLink) {
       navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
     }
+    if (navEventsLink) {
+      navEventsLink.classList.remove('hidden');
+    }
   }
   function resetHeaderAuthUI() {
     if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
     if (navAdminLink) navAdminLink.classList.add('hidden');
+    if (navEventsLink) navEventsLink.classList.add('hidden');
     closeHeaderAvatarMenu();
   }
   function closeHeaderAvatarMenu() {
