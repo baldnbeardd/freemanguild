@@ -651,8 +651,8 @@
       </div>
       <div class="form-row">
         <div>
-          <label class="label" for="eventFlyer">Flyer filename (uploaded to repo root)</label>
-          <input type="text" id="eventFlyer" placeholder="Geburtstag.jpg">
+          <label class="label" for="eventFlyerFile">Flyer image</label>
+          <input type="file" id="eventFlyerFile" accept="image/*">
         </div>
         <div>
           <label class="label" for="eventFacebook">Facebook event link</label>
@@ -972,36 +972,63 @@ window.__freemanAdminInit = true;
       });
     });
   }
-  document.getElementById('addEventBtn').addEventListener('click', async () => {
+  const addEventBtn = document.getElementById('addEventBtn');
+  addEventBtn.addEventListener('click', async () => {
     const title = document.getElementById('eventTitle').value.trim();
     const eventDate = document.getElementById('eventDate').value;
-    const flyer = document.getElementById('eventFlyer').value.trim();
+    const fileInput = document.getElementById('eventFlyerFile');
+    const file = fileInput.files[0];
     const facebookUrl = document.getElementById('eventFacebook').value.trim();
     const description = document.getElementById('eventDescription').value.trim();
     if (!title || !eventDate) {
       showStatus(eventFormStatus, 'Title and date are required.', true);
       return;
     }
-    const { data: { session } } = await supabase.auth.getSession();
-    const { error } = await supabase.from('events').insert({
-      title,
-      event_date: eventDate,
-      flyer_url: flyer || null,
-      description: description || null,
-      facebook_url: facebookUrl || null,
-      created_by: session ? session.user.id : null
-    });
-    if (error) {
-      showStatus(eventFormStatus, error.message, true);
-      return;
+    addEventBtn.disabled = true;
+    const originalLabel = addEventBtn.textContent;
+    try {
+      let flyerUrl = null;
+      if (file) {
+        addEventBtn.textContent = 'Uploading Image…';
+        const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const filePath = `${Date.now()}-${safeName}`;
+        const { error: uploadError } = await supabase.storage
+          .from('event-flyers')
+          .upload(filePath, file);
+        if (uploadError) {
+          showStatus(eventFormStatus, 'Image upload failed: ' + uploadError.message, true);
+          return;
+        }
+        const { data: publicUrlData } = supabase.storage
+          .from('event-flyers')
+          .getPublicUrl(filePath);
+        flyerUrl = publicUrlData.publicUrl;
+      }
+      addEventBtn.textContent = 'Saving Event…';
+      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.from('events').insert({
+        title,
+        event_date: eventDate,
+        flyer_url: flyerUrl,
+        description: description || null,
+        facebook_url: facebookUrl || null,
+        created_by: session ? session.user.id : null
+      });
+      if (error) {
+        showStatus(eventFormStatus, error.message, true);
+        return;
+      }
+      document.getElementById('eventTitle').value = '';
+      document.getElementById('eventDate').value = '';
+      fileInput.value = '';
+      document.getElementById('eventFacebook').value = '';
+      document.getElementById('eventDescription').value = '';
+      showStatus(eventFormStatus, 'Event added.');
+      await loadEvents();
+    } finally {
+      addEventBtn.disabled = false;
+      addEventBtn.textContent = originalLabel;
     }
-    document.getElementById('eventTitle').value = '';
-    document.getElementById('eventDate').value = '';
-    document.getElementById('eventFlyer').value = '';
-    document.getElementById('eventFacebook').value = '';
-    document.getElementById('eventDescription').value = '';
-    showStatus(eventFormStatus, 'Event added.');
-    await loadEvents();
   });
   function renderStats() {
     const total = allMembers.length;
