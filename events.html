@@ -235,6 +235,7 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             transition: all 0.3s;
+            margin: 4px 10px 4px 0;
         }
         .fb-link:hover {
             background: #fff;
@@ -423,7 +424,7 @@
         async function fetchEvents() {
             const { data, error } = await supabase
                 .from('events')
-                .select('title, event_date, flyer_url, description, facebook_url')
+                .select('title, event_date, flyer_url, description, facebook_url, extra_link_url, extra_link_label')
                 .order('event_date', { ascending: true });
             if (error) {
                 console.warn('Could not load events:', error);
@@ -434,7 +435,9 @@
                 date: e.event_date,
                 flyer: e.flyer_url,
                 description: e.description || '',
-                facebookUrl: e.facebook_url || ''
+                facebookUrl: e.facebook_url || '',
+                extraLinkUrl: e.extra_link_url || '',
+                extraLinkLabel: e.extra_link_label || ''
             }));
         }
 
@@ -463,6 +466,15 @@
             return `<a href="${url}" target="_blank" rel="noopener" class="fb-link">View on Facebook</a>`;
         }
 
+        function extraLinkHtml(url, label) {
+            if (!url) return '';
+            return `<a href="${url}" target="_blank" rel="noopener" class="fb-link">${label || 'More Info'}</a>`;
+        }
+
+        function allLinksHtml(event) {
+            return `${fbLinkHtml(event.facebookUrl)} ${extraLinkHtml(event.extraLinkUrl, event.extraLinkLabel)}`;
+        }
+
         function renderNextEvent(event) {
             const wrap = document.getElementById('nextEventWrap');
             if (!event) {
@@ -477,7 +489,7 @@
                         <h2>${event.title}</h2>
                         <div class="event-date">${formatDate(event.date)}</div>
                         <p>${event.description}</p>
-                        ${fbLinkHtml(event.facebookUrl)}
+                        ${allLinksHtml(event)}
                     </div>
                 </div>
             `;
@@ -500,7 +512,7 @@
                             <img src="${e.flyer}" alt="${e.title}">
                             <div>
                                 <p>${e.description}</p>
-                                ${fbLinkHtml(e.facebookUrl)}
+                                ${allLinksHtml(e)}
                             </div>
                         </div>
                     </div>
@@ -594,7 +606,7 @@
                                 <h2 style="font-weight:300; margin-bottom:8px;">${ev.title}</h2>
                                 <div class="event-date" style="margin-bottom:16px; opacity:0.6; text-transform:uppercase; font-size:13px; letter-spacing:1px;">${formatDate(ev.date)}</div>
                                 <p>${ev.description}</p>
-                                ${fbLinkHtml(ev.facebookUrl)}
+                                ${allLinksHtml(ev)}
                             </div>
                         </div>
                     </div>
