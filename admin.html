@@ -602,6 +602,7 @@
       <a href="merch.html">Merch</a>
       <a href="members.html">Members</a>
       <a href="events.html" id="navEventsLink" class="hidden">Events</a>
+      <a href="forum.html" id="navForumLink" class="hidden">Forum</a>
       <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
       <a href="index.html#contact" class="hidden">Contact</a>
     </nav>
@@ -717,6 +718,35 @@
         <tbody id="eventRows"></tbody>
       </table>
     </div>
+    <div class="section-title">Forum Categories</div>
+    <div id="categoryFormStatus" class="table-status-msg"></div>
+    <div class="add-event-form">
+      <div class="form-row">
+        <div>
+          <label class="label" for="categoryName">Category Name</label>
+          <input type="text" id="categoryName" placeholder="General Discussion">
+        </div>
+        <div>
+          <label class="label" for="categoryDescription">Description</label>
+          <input type="text" id="categoryDescription" placeholder="Anything Freeman Guild related.">
+        </div>
+      </div>
+      <button type="button" id="addCategoryBtn">Add Category</button>
+    </div>
+    <div id="categoriesTableStatus" class="table-status-msg"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Threads</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="categoryRows"></tbody>
+      </table>
+    </div>
     <div class="section-title">Members</div>
     <div id="tableStatus" class="table-status-msg"></div>
     <div class="table-wrap">
@@ -813,6 +843,8 @@ window.__freemanAdminInit = true;
   const blacklistStatus = document.getElementById('blacklistStatus');
   const eventFormStatus = document.getElementById('eventFormStatus');
   const eventsTableStatus = document.getElementById('eventsTableStatus');
+  const categoryFormStatus = document.getElementById('categoryFormStatus');
+  const categoriesTableStatus = document.getElementById('categoriesTableStatus');
   function showStatus(el, text, isError = false) {
     el.textContent = text;
     el.className = 'table-status-msg' + (isError ? ' error' : '');
@@ -908,6 +940,7 @@ window.__freemanAdminInit = true;
   const headerLogoutBtn = document.getElementById('headerLogoutBtn');
   const navAdminLink = document.getElementById('navAdminLink');
   const navEventsLink = document.getElementById('navEventsLink');
+  const navForumLink = document.getElementById('navForumLink');
   function applyHeaderAuthUI(profile) {
     if (!profile || !headerAvatarBtn) return;
     headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -927,11 +960,16 @@ window.__freemanAdminInit = true;
     if (navEventsLink) {
       navEventsLink.classList.remove('hidden');
     }
+    if (navForumLink) {
+      const tags = profile.tags || [];
+      navForumLink.classList.toggle('hidden', !(tags.includes('member') || tags.includes('founder') || tags.includes('admin')));
+    }
   }
   function resetHeaderAuthUI() {
     if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
     if (navAdminLink) navAdminLink.classList.add('hidden');
     if (navEventsLink) navEventsLink.classList.add('hidden');
+    if (navForumLink) navForumLink.classList.add('hidden');
     sessionStorage.removeItem('membershipLapseNoticeDismissed');
     closeHeaderAvatarMenu();
   }
@@ -971,6 +1009,7 @@ window.__freemanAdminInit = true;
   let allMembers = [];
   let allBlacklisted = [];
   let allEvents = [];
+  let allCategories = [];
   let charts = {};
   let signupsRangeDays = 30;
   async function loadDashboard() {
@@ -989,6 +1028,7 @@ window.__freemanAdminInit = true;
     renderTable();
     await loadBlacklist();
     await loadEvents();
+    await loadForumCategories();
   }
   async function loadBlacklist() {
     const { data, error } = await supabase
@@ -1056,6 +1096,80 @@ window.__freemanAdminInit = true;
       });
     });
   }
+  // ---- Forum category management (admin-only insert/delete via RLS policies) ----
+  async function loadForumCategories() {
+    const { data, error } = await supabase
+      .from('forum_categories')
+      .select('id, name, description, sort_order')
+      .order('sort_order', { ascending: true });
+    if (error) {
+      showStatus(categoriesTableStatus, 'Could not load categories: ' + error.message, true);
+      return;
+    }
+    allCategories = data || [];
+    await renderCategoriesTable();
+  }
+  async function renderCategoriesTable() {
+    const tbody = document.getElementById('categoryRows');
+    tbody.innerHTML = '';
+    if (!allCategories.length) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-note">No categories yet.</td></tr>`;
+      return;
+    }
+    const { data: threadRows } = await supabase.from('forum_threads').select('category_id');
+    const counts = {};
+    (threadRows || []).forEach(t => { counts[t.category_id] = (counts[t.category_id] || 0) + 1; });
+    allCategories.forEach(cat => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="Name">${cat.name}</td>
+        <td class="muted" data-label="Description">${cat.description || '—'}</td>
+        <td class="muted" data-label="Threads">${counts[cat.id] || 0}</td>
+        <td data-label="Actions">
+          <div class="row-actions">
+            <button type="button" class="btn-delete" data-id="${cat.id}">Delete</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        const cat = allCategories.find(c => c.id === id);
+        if (!confirm(`Delete "${cat ? cat.name : id}"? This also deletes every thread and reply in it. This cannot be undone.`)) return;
+        const { error } = await supabase.from('forum_categories').delete().eq('id', id);
+        if (error) {
+          showStatus(categoriesTableStatus, error.message, true);
+          return;
+        }
+        allCategories = allCategories.filter(c => c.id !== id);
+        await renderCategoriesTable();
+        showStatus(categoriesTableStatus, 'Category deleted.');
+      });
+    });
+  }
+  document.getElementById('addCategoryBtn').addEventListener('click', async () => {
+    const name = document.getElementById('categoryName').value.trim();
+    const description = document.getElementById('categoryDescription').value.trim();
+    if (!name) {
+      showStatus(categoryFormStatus, 'Category name is required.', true);
+      return;
+    }
+    const { error } = await supabase.from('forum_categories').insert({
+      name,
+      description: description || null,
+      sort_order: allCategories.length
+    });
+    if (error) {
+      showStatus(categoryFormStatus, error.message, true);
+      return;
+    }
+    document.getElementById('categoryName').value = '';
+    document.getElementById('categoryDescription').value = '';
+    showStatus(categoryFormStatus, 'Category added.');
+    await loadForumCategories();
+  });
   const addEventBtn = document.getElementById('addEventBtn');
   addEventBtn.addEventListener('click', async () => {
     const title = document.getElementById('eventTitle').value.trim();
