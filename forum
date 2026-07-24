@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum — Freeman Guild</title>
+    <meta name="description" content="Freeman Guild members forum">
+    <meta name="robots" content="noindex">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        body.auth-pending #pageContent {
+            display: none;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .logo {
+            height: 60px;
+            width: auto;
+            opacity: 0.95;
+        }
+        .nav-wrap {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+        nav {
+            display: flex;
+            gap: 50px;
+        }
+        nav a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #fff;
+            transition: width 0.3s;
+        }
+        nav a:hover::after {
+            width: 100%;
+        }
+        .hidden {
+            display: none;
+        }
+        .header-avatar-wrap {
+            position: relative;
+        }
+        .header-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #da3633;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #151515;
+            flex-shrink: 0;
+            padding: 0;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .header-avatar.active {
+            border-color: #2ea043;
+        }
+        .header-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .header-avatar-placeholder {
+            font-size: 13px;
+            font-weight: 400;
+            color: #8a8a8a;
+            text-transform: uppercase;
+        }
+        .header-avatar-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 170px;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px;
+            z-index: 1200;
+        }
+        .header-avatar-menu-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 10px 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .header-avatar-menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 30px;
+            height: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1100;
+        }
+        .hamburger span {
+            display: block;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        main {
+            padding: 160px 60px 100px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .page-title {
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 200;
+            letter-spacing: -1px;
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        .denied {
+            text-align: center;
+            opacity: 0.6;
+            padding: 60px 0;
+            font-size: 14px;
+        }
+        .denied a {
+            color: #fff;
+            border-bottom: 1px solid #fff;
+        }
+        /* Category grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+        }
+        .category-card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .category-card:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .category-card h3 {
+            font-size: 20px;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        .category-card p {
+            font-size: 13px;
+            opacity: 0.6;
+            margin-bottom: 16px;
+        }
+        .category-card .count {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.4;
+        }
+        /* Back / action buttons */
+        .back-btn, .action-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #e0e0e0;
+            padding: 10px 22px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .back-btn:hover, .action-btn:hover {
+            background: #fff;
+            color: #0a0a0a;
+        }
+        .thread-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 24px 0 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .thread-list-header h2 {
+            font-size: 24px;
+            font-weight: 300;
+        }
+        /* Thread list */
+        .thread-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .thread-row {
+            background: #0a0a0a;
+            padding: 22px 26px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            gap: 20px;
+            transition: background 0.3s;
+        }
+        .thread-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .thread-row-title {
+            font-size: 16px;
+            font-weight: 300;
+            margin-bottom: 6px;
+        }
+        .thread-row-meta {
+            font-size: 12px;
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .thread-row-stats {
+            font-size: 12px;
+            opacity: 0.5;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .empty-state {
+            text-align: center;
+            opacity: 0.5;
+            padding: 50px 0;
+            font-size: 13px;
+        }
+        /* New thread form */
+        .form-box {
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .form-box input, .form-box textarea {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .form-box textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-box input:focus, .form-box textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+        }
+        /* Thread detail */
+        .thread-detail-title {
+            font-size: clamp(24px, 3vw, 34px);
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        .thread-detail-meta {
+            font-size: 12px;
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+        .post-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.015);
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .post-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .post-author {
+            font-size: 13px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .post-date {
+            font-size: 11px;
+            opacity: 0.4;
+        }
+        .post-body {
+            font-size: 14px;
+            line-height: 1.8;
+            opacity: 0.85;
+            white-space: pre-wrap;
+        }
+        .delete-link {
+            background: none;
+            border: none;
+            color: #da3633;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            padding: 0;
+        }
+        .reply-form {
+            margin-top: 30px;
+        }
+        .reaction-bar {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .reaction-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+            padding: 5px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .reaction-btn:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .reaction-btn.active {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.12);
+        }
+        .reaction-emoji {
+            font-size: 15px;
+            line-height: 1;
+        }
+        .reaction-count {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        .reaction-tooltip {
+            position: fixed;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            font-size: 12px;
+            line-height: 1.5;
+            padding: 8px 12px;
+            max-width: 260px;
+            z-index: 3000;
+            pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        footer {
+            padding: 40px 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .dev-credit {
+            text-align: center;
+        }
+        .dev-credit-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .dev-credit-text {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.4;
+        }
+        .dev-credit-logo {
+            height: 22px;
+            width: auto;
+            opacity: 0.85;
+            animation: dev-logo-pulse 3s ease-in-out infinite;
+        }
+        @keyframes dev-logo-pulse {
+            0%, 100% { opacity: 0.85; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+        @media (max-width: 768px) {
+            header { padding: 20px 30px; }
+            main { padding: 140px 20px 80px; }
+            .hamburger { display: flex; }
+            .nav-wrap { gap: 18px; }
+            nav {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                height: 100vh;
+                width: min(75vw, 320px);
+                background: rgba(10, 10, 10, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 36px;
+                transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                border-left: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            nav.open { right: 0; }
+            nav a { font-size: 15px; }
+            .thread-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .thread-row-stats { text-align: left; }
+        }
+    </style>
+</head>
+<body class="auth-pending">
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="logo.png" alt="Freeman Guild" class="logo">
+        </a>
+        <div class="nav-wrap">
+            <nav id="mainNav">
+                <a href="index.html">Home</a>
+                <a href="index.html#about">About</a>
+                <a href="index.html#philosophy">Philosophy</a>
+                <a href="merch.html">Merch</a>
+                <a href="members.html">Members</a>
+                <a href="events.html">Events</a>
+                <a href="forum.html">Forum</a>
+                <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
+                <a href="index.html#contact" class="hidden">Contact</a>
+            </nav>
+            <div class="header-avatar-wrap" id="headerAvatarWrap">
+                <button type="button" id="headerAvatarBtn" class="header-avatar hidden" aria-haspopup="true" aria-expanded="false" title="Account menu">
+                    <img id="headerAvatarImg" class="header-avatar-img hidden" alt="Profile photo">
+                    <span id="headerAvatarPlaceholder" class="header-avatar-placeholder"></span>
+                </button>
+                <div id="headerAvatarMenu" class="header-avatar-menu hidden">
+                    <a href="members.html" class="header-avatar-menu-item">My Profile</a>
+                    <button type="button" id="headerLogoutBtn" class="header-avatar-menu-item">Log Out</button>
+                </div>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <div id="pageContent">
+        <main>
+            <h1 class="page-title">Forum</h1>
+
+            <div id="deniedView" class="hidden denied">
+                The forum is available to active members only.
+                <br><br>
+                <a href="members.html">Visit your member dashboard</a>
+            </div>
+
+            <div id="forumApp" class="hidden">
+                <!-- Category view -->
+                <div id="categoryView">
+                    <div class="category-grid" id="categoryGrid"></div>
+                </div>
+
+                <!-- Thread list view -->
+                <div id="threadListView" class="hidden">
+                    <button class="back-btn" id="backToCategories">&larr; Categories</button>
+                    <div class="thread-list-header">
+                        <h2 id="currentCategoryTitle"></h2>
+                        <button class="action-btn" id="newThreadBtn">New Thread</button>
+                    </div>
+
+                    <div id="newThreadForm" class="form-box hidden">
+                        <input type="text" id="newThreadTitle" placeholder="Thread title">
+                        <textarea id="newThreadBody" placeholder="What's on your mind?"></textarea>
+                        <div class="form-actions">
+                            <button class="action-btn" id="submitThreadBtn">Post Thread</button>
+                            <button class="back-btn" id="cancelThreadBtn">Cancel</button>
+                        </div>
+                    </div>
+
+                    <div id="threadList"></div>
+                </div>
+
+                <!-- Thread detail view -->
+                <div id="threadDetailView" class="hidden">
+                    <button class="back-btn" id="backToThreads">&larr; Back to Threads</button>
+                    <div id="threadDetailContent" style="margin-top:24px;"></div>
+                    <div id="postsList" style="margin-top:20px;"></div>
+                    <div class="form-box reply-form">
+                        <textarea id="replyBody" placeholder="Write a reply..."></textarea>
+                        <div class="form-actions">
+                            <button class="action-btn" id="submitReplyBtn">Reply</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <div class="dev-credit">
+                <a href="mailto:drenfx@atomicmail.io?subject=Freeman%20Guild%20Site%20--%20Inquiry%20_________" class="dev-credit-link">
+                    <span class="dev-credit-text">Developed and Designed by</span>
+                    <img src="DRENFXLOGO-1.png" alt="DRENFX" class="dev-credit-logo">
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null; // { id, name }
+        let isAdmin = false;
+        let currentCategory = null;
+        let currentThread = null;
+        let currentPosts = [];
+        const REACTIONS = [
+            { key: 'thumbs_up', emoji: '👍' },
+            { key: 'thumbs_down', emoji: '👎' },
+            { key: 'exclamation', emoji: '❗' },
+            { key: 'laughing', emoji: '😂' }
+        ];
+
+        (async function gate() {
+            let session;
+            try {
+                ({ data: { session } } = await supabase.auth.getSession());
+                if (!session) {
+                    window.location.href = 'members.html';
+                    return;
+                }
+            } catch (err) {
+                console.warn('Auth check failed, redirecting:', err);
+                window.location.href = 'members.html';
+                return;
+            }
+            document.body.classList.remove('auth-pending');
+
+            let profile = null;
+            try {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('name, email, avatar_url, membership_status, tags')
+                    .eq('id', session.user.id)
+                    .single();
+                profile = data;
+                if (profile) applyHeaderAuthUI(profile);
+            } catch (err) {
+                console.warn('Header auth check failed:', err);
+            }
+
+            const tags = (profile && profile.tags) || [];
+            const isMemberOrAbove = tags.includes('member') || tags.includes('founder') || tags.includes('admin');
+            isAdmin = tags.includes('admin');
+            currentUser = { id: session.user.id, name: (profile && (profile.name || profile.email)) || 'Member' };
+
+            if (!isMemberOrAbove) {
+                document.getElementById('deniedView').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('forumApp').classList.remove('hidden');
+            await loadCategories();
+        })();
+
+        // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
+        const headerAvatarWrap = document.getElementById('headerAvatarWrap');
+        const headerAvatarBtn = document.getElementById('headerAvatarBtn');
+        const headerAvatarImg = document.getElementById('headerAvatarImg');
+        const headerAvatarPlaceholder = document.getElementById('headerAvatarPlaceholder');
+        const headerAvatarMenu = document.getElementById('headerAvatarMenu');
+        const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+        const navAdminLink = document.getElementById('navAdminLink');
+
+        function applyHeaderAuthUI(profile) {
+            if (!profile || !headerAvatarBtn) return;
+            headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
+            headerAvatarBtn.classList.remove('hidden');
+            if (profile.avatar_url) {
+                headerAvatarImg.src = profile.avatar_url;
+                headerAvatarImg.classList.remove('hidden');
+                headerAvatarPlaceholder.classList.add('hidden');
+            } else {
+                headerAvatarImg.classList.add('hidden');
+                headerAvatarPlaceholder.classList.remove('hidden');
+                headerAvatarPlaceholder.textContent = (profile.name || profile.email || '?').trim().charAt(0).toUpperCase();
+            }
+            if (navAdminLink) {
+                navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
+            }
+        }
+        function closeHeaderAvatarMenu() {
+            if (!headerAvatarMenu) return;
+            headerAvatarMenu.classList.add('hidden');
+            if (headerAvatarBtn) headerAvatarBtn.setAttribute('aria-expanded', 'false');
+        }
+        function toggleHeaderAvatarMenu() {
+            if (!headerAvatarMenu) return;
+            const isOpen = !headerAvatarMenu.classList.contains('hidden');
+            if (isOpen) {
+                closeHeaderAvatarMenu();
+            } else {
+                headerAvatarMenu.classList.remove('hidden');
+                headerAvatarBtn.setAttribute('aria-expanded', 'true');
+            }
+        }
+        if (headerAvatarBtn) {
+            headerAvatarBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleHeaderAvatarMenu();
+            });
+        }
+        document.addEventListener('click', (e) => {
+            if (headerAvatarWrap && !headerAvatarWrap.contains(e.target)) closeHeaderAvatarMenu();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeHeaderAvatarMenu();
+        });
+        if (headerLogoutBtn) {
+            headerLogoutBtn.addEventListener('click', async () => {
+                closeHeaderAvatarMenu();
+                await supabase.auth.signOut();
+                sessionStorage.removeItem('membershipLapseNoticeDismissed');
+                window.location.href = 'members.html';
+            });
+        }
+
+        // ---- Forum logic ----
+        function formatDateTime(iso) {
+            return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        }
+
+        async function loadCategories() {
+            const { data, error } = await supabase
+                .from('forum_categories')
+                .select('id, name, description, sort_order')
+                .order('sort_order', { ascending: true });
+            const grid = document.getElementById('categoryGrid');
+            if (error) {
+                grid.innerHTML = `<div class="empty-state">Could not load categories: ${error.message}</div>`;
+                return;
+            }
+            if (!data || !data.length) {
+                grid.innerHTML = '<div class="empty-state">No categories yet.</div>';
+                return;
+            }
+            const { data: threadRows } = await supabase.from('forum_threads').select('category_id');
+            const counts = {};
+            (threadRows || []).forEach(t => { counts[t.category_id] = (counts[t.category_id] || 0) + 1; });
+
+            grid.innerHTML = data.map(cat => `
+                <div class="category-card" data-id="${cat.id}">
+                    <h3>${cat.name}</h3>
+                    <p>${cat.description || ''}</p>
+                    <div class="count">${counts[cat.id] || 0} thread${(counts[cat.id] || 0) === 1 ? '' : 's'}</div>
+                </div>
+            `).join('');
+            grid.querySelectorAll('.category-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const cat = data.find(c => c.id === card.dataset.id);
+                    openCategory(cat);
+                });
+            });
+        }
+
+        async function openCategory(category) {
+            currentCategory = category;
+            document.getElementById('categoryView').classList.add('hidden');
+            document.getElementById('threadDetailView').classList.add('hidden');
+            document.getElementById('threadListView').classList.remove('hidden');
+            document.getElementById('currentCategoryTitle').textContent = category.name;
+            document.getElementById('newThreadForm').classList.add('hidden');
+            await loadThreads();
+        }
+
+        async function loadThreads() {
+            const listEl = document.getElementById('threadList');
+            const { data, error } = await supabase
+                .from('forum_threads')
+                .select('id, title, author_name, created_at, last_activity_at, reply_count')
+                .eq('category_id', currentCategory.id)
+                .order('last_activity_at', { ascending: false });
+            if (error) {
+                listEl.innerHTML = `<div class="empty-state">Could not load threads: ${error.message}</div>`;
+                return;
+            }
+            if (!data || !data.length) {
+                listEl.innerHTML = '<div class="empty-state">No threads yet — start the first one.</div>';
+                return;
+            }
+            listEl.innerHTML = `<div class="thread-list">${data.map(t => `
+                <div class="thread-row" data-id="${t.id}">
+                    <div>
+                        <div class="thread-row-title">${t.title}</div>
+                        <div class="thread-row-meta">by ${t.author_name} · ${formatDateTime(t.created_at)}</div>
+                    </div>
+                    <div class="thread-row-stats">${t.reply_count} repl${t.reply_count === 1 ? 'y' : 'ies'}<br>last activity ${formatDateTime(t.last_activity_at)}</div>
+                </div>
+            `).join('')}</div>`;
+            listEl.querySelectorAll('.thread-row').forEach(row => {
+                row.addEventListener('click', () => openThread(row.dataset.id));
+            });
+        }
+
+        document.getElementById('backToCategories').addEventListener('click', () => {
+            document.getElementById('threadListView').classList.add('hidden');
+            document.getElementById('categoryView').classList.remove('hidden');
+            loadCategories();
+        });
+
+        document.getElementById('newThreadBtn').addEventListener('click', () => {
+            document.getElementById('newThreadForm').classList.toggle('hidden');
+        });
+        document.getElementById('cancelThreadBtn').addEventListener('click', () => {
+            document.getElementById('newThreadForm').classList.add('hidden');
+            document.getElementById('newThreadTitle').value = '';
+            document.getElementById('newThreadBody').value = '';
+        });
+        document.getElementById('submitThreadBtn').addEventListener('click', async () => {
+            const title = document.getElementById('newThreadTitle').value.trim();
+            const body = document.getElementById('newThreadBody').value.trim();
+            if (!title || !body) return;
+            const btn = document.getElementById('submitThreadBtn');
+            btn.disabled = true;
+            const { error } = await supabase.from('forum_threads').insert({
+                category_id: currentCategory.id,
+                title,
+                body,
+                author_id: currentUser.id,
+                author_name: currentUser.name
+            });
+            btn.disabled = false;
+            if (error) {
+                alert('Could not post thread: ' + error.message);
+                return;
+            }
+            document.getElementById('newThreadTitle').value = '';
+            document.getElementById('newThreadBody').value = '';
+            document.getElementById('newThreadForm').classList.add('hidden');
+            await loadThreads();
+        });
+
+        async function openThread(threadId) {
+            document.getElementById('threadListView').classList.add('hidden');
+            document.getElementById('threadDetailView').classList.remove('hidden');
+            const { data: thread, error } = await supabase
+                .from('forum_threads')
+                .select('id, title, body, author_id, author_name, created_at')
+                .eq('id', threadId)
+                .single();
+            if (error || !thread) {
+                document.getElementById('threadDetailContent').innerHTML = `<div class="empty-state">Could not load thread.</div>`;
+                return;
+            }
+            currentThread = thread;
+            renderThreadDetail(thread);
+            await loadPosts(threadId);
+        }
+
+        function renderThreadDetail(thread) {
+            const canDelete = isAdmin || thread.author_id === currentUser.id;
+            document.getElementById('threadDetailContent').innerHTML = `
+                <div class="thread-detail-title">${thread.title}</div>
+                <div class="thread-detail-meta">
+                    by ${thread.author_name} · ${formatDateTime(thread.created_at)}
+                    ${canDelete ? ` · <button class="delete-link" id="deleteThreadBtn">Delete Thread</button>` : ''}
+                </div>
+                <div class="post-body">${thread.body}</div>
+                <div class="reaction-bar" id="reactionBar-thread-${thread.id}"></div>
+            `;
+            const deleteBtn = document.getElementById('deleteThreadBtn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    if (!confirm('Delete this thread and all its replies? This cannot be undone.')) return;
+                    const { error } = await supabase.from('forum_threads').delete().eq('id', thread.id);
+                    if (error) {
+                        alert('Could not delete thread: ' + error.message);
+                        return;
+                    }
+                    document.getElementById('threadDetailView').classList.add('hidden');
+                    document.getElementById('threadListView').classList.remove('hidden');
+                    await loadThreads();
+                });
+            }
+        }
+
+        async function loadPosts(threadId) {
+            const postsEl = document.getElementById('postsList');
+            const { data, error } = await supabase
+                .from('forum_posts')
+                .select('id, body, author_id, author_name, created_at')
+                .eq('thread_id', threadId)
+                .order('created_at', { ascending: true });
+            if (error) {
+                postsEl.innerHTML = `<div class="empty-state">Could not load replies: ${error.message}</div>`;
+                currentPosts = [];
+                return;
+            }
+            currentPosts = data || [];
+            if (!currentPosts.length) {
+                postsEl.innerHTML = '<div class="empty-state">No replies yet.</div>';
+                await refreshReactions();
+                return;
+            }
+            postsEl.innerHTML = currentPosts.map(p => {
+                const canDelete = isAdmin || p.author_id === currentUser.id;
+                return `
+                    <div class="post-card" data-id="${p.id}">
+                        <div class="post-card-header">
+                            <span class="post-author">${p.author_name}</span>
+                            <span class="post-date">${formatDateTime(p.created_at)}${canDelete ? ` · <button class="delete-link" data-post-id="${p.id}">Delete</button>` : ''}</span>
+                        </div>
+                        <div class="post-body">${p.body}</div>
+                        <div class="reaction-bar" id="reactionBar-post-${p.id}"></div>
+                    </div>
+                `;
+            }).join('');
+            postsEl.querySelectorAll('.delete-link[data-post-id]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('Delete this reply?')) return;
+                    const { error } = await supabase.from('forum_posts').delete().eq('id', btn.dataset.postId);
+                    if (error) {
+                        alert('Could not delete reply: ' + error.message);
+                        return;
+                    }
+                    await loadPosts(threadId);
+                });
+            });
+            await refreshReactions();
+        }
+
+        // ---- Reactions (👍 👎 ❗ 😂 on threads and posts) ----
+        function buildReactionMap(rows) {
+            const map = {};
+            rows.forEach(r => {
+                const targetId = r.thread_id || r.post_id;
+                if (!map[targetId]) map[targetId] = {};
+                if (!map[targetId][r.reaction]) map[targetId][r.reaction] = [];
+                map[targetId][r.reaction].push({ id: r.id, user_id: r.user_id, user_name: r.user_name });
+            });
+            return map;
+        }
+
+        async function refreshReactions() {
+            if (!currentThread) return;
+            const postIds = currentPosts.map(p => p.id);
+            const { data: threadRows } = await supabase
+                .from('forum_reactions')
+                .select('id, thread_id, post_id, user_id, user_name, reaction')
+                .eq('thread_id', currentThread.id);
+            let postRows = [];
+            if (postIds.length) {
+                const { data } = await supabase
+                    .from('forum_reactions')
+                    .select('id, thread_id, post_id, user_id, user_name, reaction')
+                    .in('post_id', postIds);
+                postRows = data || [];
+            }
+            const map = buildReactionMap([...(threadRows || []), ...postRows]);
+            renderReactionBar(`reactionBar-thread-${currentThread.id}`, currentThread.id, 'thread', map);
+            currentPosts.forEach(p => renderReactionBar(`reactionBar-post-${p.id}`, p.id, 'post', map));
+        }
+
+        function renderReactionBar(elId, targetId, targetType, map) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const targetReactions = map[targetId] || {};
+            el.innerHTML = REACTIONS.map(r => {
+                const users = targetReactions[r.key] || [];
+                const mine = users.some(u => u.user_id === currentUser.id);
+                return `<button type="button" class="reaction-btn ${mine ? 'active' : ''}" data-target-id="${targetId}" data-target-type="${targetType}" data-reaction="${r.key}">
+                    <span class="reaction-emoji">${r.emoji}</span><span class="reaction-count">${users.length || ''}</span>
+                </button>`;
+            }).join('');
+            el.querySelectorAll('.reaction-btn').forEach(btn => {
+                const reactionKey = btn.dataset.reaction;
+                const users = targetReactions[reactionKey] || [];
+                if (users.length) {
+                    btn.addEventListener('mouseenter', () => showReactionTooltip(btn, users));
+                    btn.addEventListener('mouseleave', hideReactionTooltip);
+                }
+                btn.addEventListener('click', () => toggleReaction(targetId, targetType, reactionKey));
+            });
+        }
+
+        let reactionTooltipEl = null;
+        function showReactionTooltip(btn, users) {
+            hideReactionTooltip();
+            const tooltip = document.createElement('div');
+            tooltip.className = 'reaction-tooltip';
+            tooltip.textContent = users.map(u => u.user_name).join(', ');
+            document.body.appendChild(tooltip);
+            const rect = btn.getBoundingClientRect();
+            tooltip.style.left = Math.max(8, rect.left) + 'px';
+            tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
+            reactionTooltipEl = tooltip;
+        }
+        function hideReactionTooltip() {
+            if (reactionTooltipEl) {
+                reactionTooltipEl.remove();
+                reactionTooltipEl = null;
+            }
+        }
+
+        async function toggleReaction(targetId, targetType, reactionKey) {
+            hideReactionTooltip();
+            const column = targetType === 'thread' ? 'thread_id' : 'post_id';
+            const { data: existing } = await supabase
+                .from('forum_reactions')
+                .select('id')
+                .eq(column, targetId)
+                .eq('user_id', currentUser.id)
+                .eq('reaction', reactionKey)
+                .maybeSingle();
+            if (existing) {
+                await supabase.from('forum_reactions').delete().eq('id', existing.id);
+            } else {
+                await supabase.from('forum_reactions').insert({
+                    [column]: targetId,
+                    user_id: currentUser.id,
+                    user_name: currentUser.name,
+                    reaction: reactionKey
+                });
+            }
+            await refreshReactions();
+        }
+
+        document.getElementById('backToThreads').addEventListener('click', () => {
+            document.getElementById('threadDetailView').classList.add('hidden');
+            document.getElementById('threadListView').classList.remove('hidden');
+            loadThreads();
+        });
+
+        document.getElementById('submitReplyBtn').addEventListener('click', async () => {
+            const body = document.getElementById('replyBody').value.trim();
+            if (!body || !currentThread) return;
+            const btn = document.getElementById('submitReplyBtn');
+            btn.disabled = true;
+            const { error } = await supabase.from('forum_posts').insert({
+                thread_id: currentThread.id,
+                body,
+                author_id: currentUser.id,
+                author_name: currentUser.name
+            });
+            btn.disabled = false;
+            if (error) {
+                alert('Could not post reply: ' + error.message);
+                return;
+            }
+            document.getElementById('replyBody').value = '';
+            await loadPosts(currentThread.id);
+        });
+
+        // Hamburger menu toggle
+        const hamburger = document.getElementById('hamburger');
+        const mainNav = document.getElementById('mainNav');
+        hamburger.addEventListener('click', () => {
+            const isOpen = mainNav.classList.toggle('open');
+            hamburger.classList.toggle('open', isOpen);
+            hamburger.setAttribute('aria-expanded', isOpen);
+        });
+        mainNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mainNav.classList.remove('open');
+                hamburger.classList.remove('open');
+                hamburger.setAttribute('aria-expanded', 'false');
+            });
+        });
+    </script>
+</body>
+</html>
