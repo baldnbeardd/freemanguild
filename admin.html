@@ -389,7 +389,6 @@
     letter-spacing: 1px;
   }
   select.status-select.active { border-color: var(--green); color: var(--green); }
-  select.status-select.inactive { border-color: var(--red); color: var(--red); }
   select.status-select.pending { border-color: var(--accent); color: var(--accent); }
   .table-status-msg {
     text-align: center;
@@ -483,7 +482,7 @@
     color: var(--muted);
   }
   .modal-badge.active { color: var(--green); }
-  .modal-badge.inactive { color: var(--red); }
+  .modal-badge.pending { color: var(--accent); }
   .modal-field {
     display: flex;
     justify-content: space-between;
@@ -557,6 +556,36 @@
     th, td { font-size: 12px; }
     .row-actions { flex-direction: column; align-items: stretch; gap: 6px; }
     .row-actions button { width: 100%; }
+  }
+  footer {
+    padding: 40px 24px;
+    border-top: 1px solid var(--line);
+  }
+  .dev-credit {
+    text-align: center;
+  }
+  .dev-credit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .dev-credit-text {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.4;
+  }
+  .dev-credit-logo {
+    height: 22px;
+    width: auto;
+    opacity: 0.85;
+    animation: dev-logo-pulse 3s ease-in-out infinite;
+  }
+  @keyframes dev-logo-pulse {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
   }
 </style>
 </head>
@@ -752,6 +781,14 @@
     </div>
   </div>
 </main>
+<footer>
+  <div class="dev-credit">
+    <a href="mailto:drenfx@atomicmail.io?subject=Freeman%20Guild%20Site%20--%20Inquiry%20_________" class="dev-credit-link">
+      <span class="dev-credit-text">Developed and Designed by</span>
+      <img src="DRENFXLOGO-1.png" alt="DRENFX" class="dev-credit-logo">
+    </a>
+  </div>
+</footer>
 <script>
 if (window.__freemanAdminInit) {
   console.warn('Admin script already initialized — skipping duplicate run.');
@@ -1175,20 +1212,20 @@ window.__freemanAdminInit = true;
     Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
     // --- Signups over time (daily, with range toggle) ---
     renderSignupsChart();
-    // --- Membership status breakdown (Active vs Inactive; Pending excluded) ---
-    const statusCounts = { active: 0, pending: 0, inactive: 0 };
+    // --- Membership status breakdown (Active vs Pending) ---
+    const statusCounts = { active: 0, pending: 0 };
     allMembers.forEach(m => {
-      const s = m.membership_status || 'inactive';
-      statusCounts[s] = (statusCounts[s] || 0) + 1;
+      const s = m.membership_status === 'active' ? 'active' : 'pending';
+      statusCounts[s] += 1;
     });
     if (charts.status) charts.status.destroy();
     charts.status = new Chart(document.getElementById('statusChart'), {
       type: 'doughnut',
       data: {
-        labels: ['Active', 'Inactive'],
+        labels: ['Active', 'Pending'],
         datasets: [{
-          data: [statusCounts.active, statusCounts.inactive],
-          backgroundColor: ['#2ea043', '#da3633'],
+          data: [statusCounts.active, statusCounts.pending],
+          backgroundColor: ['#2ea043', '#4a9eff'],
           borderColor: '#0a0a0a',
           borderWidth: 2
         }]
@@ -1238,7 +1275,7 @@ window.__freemanAdminInit = true;
         const checked = (m.tags || []).includes(tag) ? 'checked' : '';
         return `<label><input type="checkbox" data-id="${m.id}" data-tag="${tag}" ${checked}> ${tag}</label>`;
       }).join('');
-      const status = m.membership_status || 'inactive';
+      const status = m.membership_status === 'active' ? 'active' : 'pending';
       const facebookCell = m.facebook
         ? `<a href="${m.facebook.startsWith('http') ? m.facebook : 'https://' + m.facebook}" target="_blank" rel="noopener">${m.facebook}</a>`
         : '<span class="muted">—</span>';
@@ -1249,7 +1286,6 @@ window.__freemanAdminInit = true;
         <td class="muted" data-label="Joined">${formatDate(m.created_at)}</td>
         <td data-label="Membership">
           <select class="status-select ${status}" data-id="${m.id}">
-            <option value="inactive" ${status === 'inactive' ? 'selected' : ''}>Inactive</option>
             <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
             <option value="active" ${status === 'active' ? 'selected' : ''}>Active</option>
           </select>
@@ -1304,7 +1340,7 @@ window.__freemanAdminInit = true;
         const id = e.target.dataset.id;
         const newStatus = e.target.value;
         const member = allMembers.find(m => m.id === id);
-        const previousStatus = member ? (member.membership_status || 'inactive') : 'inactive';
+        const previousStatus = member && member.membership_status === 'active' ? 'active' : 'pending';
 
         if (newStatus === 'active') {
           const chosenDate = await promptMembershipDate(member ? member.membership_date : null);
@@ -1434,10 +1470,10 @@ window.__freemanAdminInit = true;
   const memberModalOverlay = document.getElementById('memberModalOverlay');
   function openMemberModal(member) {
     document.getElementById('modalName').textContent = member.name || '(no name on file)';
-    const status = member.membership_status || 'inactive';
+    const status = member.membership_status === 'active' ? 'active' : 'pending';
     const badge = document.getElementById('modalBadge');
     badge.textContent = 'Membership: ' + status.toUpperCase();
-    badge.className = 'modal-badge ' + (status === 'active' ? 'active' : 'inactive');
+    badge.className = 'modal-badge ' + status;
     document.getElementById('modalEmail').textContent = member.email || '—';
     document.getElementById('modalPhone').textContent = member.phone || '—';
     document.getElementById('modalFacebook').textContent = member.facebook || '—';
