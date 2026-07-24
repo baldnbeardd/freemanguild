@@ -411,6 +411,36 @@
             .calendar-day { min-height: 60px; }
             .calendar-day-title { display: none; }
         }
+        footer {
+            padding: 40px 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .dev-credit {
+            text-align: center;
+        }
+        .dev-credit-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .dev-credit-text {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.4;
+        }
+        .dev-credit-logo {
+            height: 22px;
+            width: auto;
+            opacity: 0.85;
+            animation: dev-logo-pulse 3s ease-in-out infinite;
+        }
+        @keyframes dev-logo-pulse {
+            0%, 100% { opacity: 0.85; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
     </style>
 </head>
 <body class="auth-pending">
@@ -470,6 +500,14 @@
                 <div id="calendarDetail"></div>
             </div>
         </main>
+        <footer>
+            <div class="dev-credit">
+                <a href="mailto:drenfx@atomicmail.io?subject=Freeman%20Guild%20Site%20--%20Inquiry%20_________" class="dev-credit-link">
+                    <span class="dev-credit-text">Developed and Designed by</span>
+                    <img src="DRENFXLOGO-1.png" alt="DRENFX" class="dev-credit-logo">
+                </a>
+            </div>
+        </footer>
     </div>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
