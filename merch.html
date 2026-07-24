@@ -360,6 +360,34 @@
             padding-top: 40px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
+        .dev-credit {
+            text-align: center;
+            padding-top: 30px;
+            margin-top: 30px;
+        }
+        .dev-credit-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .dev-credit-text {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.4;
+        }
+        .dev-credit-logo {
+            height: 22px;
+            width: auto;
+            opacity: 0.85;
+            animation: dev-logo-pulse 3s ease-in-out infinite;
+        }
+        @keyframes dev-logo-pulse {
+            0%, 100% { opacity: 0.85; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
         /* Responsive */
         @media (max-width: 768px) {
             header {
@@ -732,6 +760,12 @@
         </div>
         <div class="copyright">
             © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.
+        </div>
+        <div class="dev-credit">
+            <a href="mailto:drenfx@atomicmail.io?subject=Freeman%20Guild%20Site%20--%20Inquiry%20_________" class="dev-credit-link">
+                <span class="dev-credit-text">Developed and Designed by</span>
+                <img src="DRENFXLOGO-1.png" alt="DRENFX" class="dev-credit-logo">
+            </a>
         </div>
     </footer>
     <script>
