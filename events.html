@@ -302,6 +302,102 @@
             background: #fff;
             color: #0a0a0a;
         }
+        /* RSVP */
+        .rsvp-section {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .rsvp-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+        .rsvp-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 9px 18px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .rsvp-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .rsvp-btn.active {
+            background: #fff;
+            color: #0a0a0a;
+            border-color: #fff;
+        }
+        .rsvp-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .rsvp-group-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.5;
+            margin-bottom: 8px;
+        }
+        .rsvp-avatars {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 32px;
+        }
+        .rsvp-avatar {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #151515;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+        }
+        .rsvp-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .rsvp-avatar-placeholder {
+            font-size: 11px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+        .rsvp-avatar-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 11px;
+            padding: 5px 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        .rsvp-avatar:hover .rsvp-avatar-tooltip {
+            opacity: 1;
+        }
+        .rsvp-empty {
+            font-size: 12px;
+            opacity: 0.35;
+        }
         /* Calendar view */
         .calendar-nav {
             display: flex;
@@ -572,6 +668,10 @@
         const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ---- RSVP state (populated once auth is confirmed) ----
+        let currentUserId = null;
+        let rsvpsByEvent = {};
+        let myRsvpByEvent = {};
         (async function gate() {
             let session;
             try {
@@ -580,6 +680,7 @@
                     window.location.href = 'members.html';
                     return;
                 }
+                currentUserId = session.user.id;
             } catch (err) {
                 console.warn('Auth check failed, redirecting:', err);
                 window.location.href = 'members.html';
@@ -666,13 +767,14 @@
         async function fetchEvents() {
             const { data, error } = await supabase
                 .from('events')
-                .select('title, event_date, flyer_url, description, facebook_url, extra_link_url, extra_link_label')
+                .select('id, title, event_date, flyer_url, description, facebook_url, extra_link_url, extra_link_label')
                 .order('event_date', { ascending: true });
             if (error) {
                 console.warn('Could not load events:', error);
                 return [];
             }
             return (data || []).map(e => ({
+                id: e.id,
                 title: e.title,
                 date: e.event_date,
                 flyer: e.flyer_url,
@@ -681,6 +783,147 @@
                 extraLinkUrl: e.extra_link_url || '',
                 extraLinkLabel: e.extra_link_label || ''
             }));
+        }
+        // ---- RSVPs ----
+        // Profile info for avatars is pulled from `member_public_profiles`, a
+        // view that only exposes id/name/avatar_url — never email, phone,
+        // tags, etc. — so any authenticated member can see who's RSVP'd
+        // without exposing everyone's full profile row.
+        async function fetchProfilesByIds(ids) {
+            const uniqueIds = [...new Set(ids)].filter(Boolean);
+            if (!uniqueIds.length) return {};
+            const { data, error } = await supabase
+                .from('member_public_profiles')
+                .select('id, name, avatar_url')
+                .in('id', uniqueIds);
+            if (error) {
+                console.warn('Could not load member profiles for RSVPs:', error);
+                return {};
+            }
+            const map = {};
+            (data || []).forEach(p => { map[p.id] = p; });
+            return map;
+        }
+        function applyRsvpRow(row, profileMap) {
+            if (!rsvpsByEvent[row.event_id]) {
+                rsvpsByEvent[row.event_id] = { attending: [], interested: [], not_attending: [] };
+            }
+            const bucket = rsvpsByEvent[row.event_id][row.status];
+            const profile = profileMap ? profileMap[row.user_id] : null;
+            if (bucket) {
+                bucket.push({
+                    name: (profile && profile.name) || 'Member',
+                    avatarUrl: profile ? profile.avatar_url : null
+                });
+            }
+            if (row.user_id === currentUserId) myRsvpByEvent[row.event_id] = row.status;
+        }
+        async function loadRsvps(events) {
+            const ids = events.map(e => e.id).filter(Boolean);
+            rsvpsByEvent = {};
+            myRsvpByEvent = {};
+            if (!ids.length) return;
+            const { data, error } = await supabase
+                .from('event_rsvps')
+                .select('event_id, user_id, status')
+                .in('event_id', ids);
+            if (error) {
+                console.warn('Could not load RSVPs:', error);
+                return;
+            }
+            const rows = data || [];
+            const profileMap = await fetchProfilesByIds(rows.map(r => r.user_id));
+            rows.forEach(row => applyRsvpRow(row, profileMap));
+        }
+        async function refreshRsvpsForEvent(eventId) {
+            rsvpsByEvent[eventId] = { attending: [], interested: [], not_attending: [] };
+            delete myRsvpByEvent[eventId];
+            const { data, error } = await supabase
+                .from('event_rsvps')
+                .select('event_id, user_id, status')
+                .eq('event_id', eventId);
+            if (error) {
+                console.warn('Could not refresh RSVPs:', error);
+                return;
+            }
+            const rows = data || [];
+            const profileMap = await fetchProfilesByIds(rows.map(r => r.user_id));
+            rows.forEach(row => applyRsvpRow(row, profileMap));
+            document.querySelectorAll(`.rsvp-section[data-event-id="${eventId}"]`).forEach(el => {
+                el.outerHTML = rsvpSectionHtml(eventId);
+            });
+        }
+        async function setRsvp(eventId, status) {
+            if (!currentUserId || !eventId) return;
+            const current = myRsvpByEvent[eventId] || null;
+            const nextStatus = current === status ? null : status;
+            try {
+                if (nextStatus === null) {
+                    const { error } = await supabase
+                        .from('event_rsvps')
+                        .delete()
+                        .eq('event_id', eventId)
+                        .eq('user_id', currentUserId);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabase
+                        .from('event_rsvps')
+                        .upsert({ event_id: eventId, user_id: currentUserId, status: nextStatus }, { onConflict: 'event_id,user_id' });
+                    if (error) throw error;
+                }
+            } catch (err) {
+                console.warn('Could not update RSVP:', err);
+                return;
+            }
+            await refreshRsvpsForEvent(eventId);
+        }
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.rsvp-btn');
+            if (!btn) return;
+            setRsvp(btn.dataset.event, btn.dataset.status);
+        });
+        function rsvpAvatarsHtml(list) {
+            if (!list.length) return '<span class="rsvp-empty">&mdash;</span>';
+            return list.map(p => {
+                const initial = (p.name || '?').trim().charAt(0).toUpperCase();
+                const inner = p.avatarUrl
+                    ? `<img src="${p.avatarUrl}" alt="${p.name}">`
+                    : `<span class="rsvp-avatar-placeholder">${initial}</span>`;
+                return `
+                    <span class="rsvp-avatar">
+                        ${inner}
+                        <span class="rsvp-avatar-tooltip">${p.name}</span>
+                    </span>
+                `;
+            }).join('');
+        }
+        function rsvpSectionHtml(eventId) {
+            if (!eventId) return '';
+            const groups = rsvpsByEvent[eventId] || { attending: [], interested: [], not_attending: [] };
+            const mine = myRsvpByEvent[eventId] || null;
+            return `
+                <div class="rsvp-section" data-event-id="${eventId}">
+                    <div class="rsvp-actions">
+                        <button type="button" class="rsvp-btn ${mine === 'attending' ? 'active' : ''}" data-event="${eventId}" data-status="attending">Attending</button>
+                        <button type="button" class="rsvp-btn ${mine === 'interested' ? 'active' : ''}" data-event="${eventId}" data-status="interested">Interested</button>
+                        <button type="button" class="rsvp-btn ${mine === 'not_attending' ? 'active' : ''}" data-event="${eventId}" data-status="not_attending">Can't Attend</button>
+                    </div>
+                    <div class="rsvp-groups">
+                        <div class="rsvp-group">
+                            <div class="rsvp-group-label">Attending (${groups.attending.length})</div>
+                            <div class="rsvp-avatars">${rsvpAvatarsHtml(groups.attending)}</div>
+                        </div>
+                        <div class="rsvp-group">
+                            <div class="rsvp-group-label">Interested (${groups.interested.length})</div>
+                            <div class="rsvp-avatars">${rsvpAvatarsHtml(groups.interested)}</div>
+                        </div>
+                        <div class="rsvp-group">
+                            <div class="rsvp-group-label">Can't Attend (${groups.not_attending.length})</div>
+                            <div class="rsvp-avatars">${rsvpAvatarsHtml(groups.not_attending)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
         // ---- Page logic (only runs after auth confirmed) ----
         async function initEventsPage() {
@@ -694,6 +937,7 @@
                 .filter(e => new Date(e.date + 'T23:59:59') < today)
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
             const nextEvent = upcoming[0] || null;
+            await loadRsvps(sorted);
             renderNextEvent(nextEvent);
             renderListView(upcoming);
             renderPastEventsView(past);
@@ -731,6 +975,7 @@
                         <div class="event-date">${formatDate(event.date)}</div>
                         <p>${event.description}</p>
                         ${allLinksHtml(event)}
+                        ${rsvpSectionHtml(event.id)}
                     </div>
                 </div>
             `;
@@ -753,6 +998,7 @@
                             <div>
                                 <p>${e.description}</p>
                                 ${allLinksHtml(e)}
+                                ${rsvpSectionHtml(e.id)}
                             </div>
                         </div>
                     </div>
@@ -780,6 +1026,7 @@
                             <div>
                                 <p>${e.description}</p>
                                 ${allLinksHtml(e)}
+                                ${rsvpSectionHtml(e.id)}
                             </div>
                         </div>
                     </div>
@@ -884,6 +1131,7 @@
                                 <div class="event-date" style="margin-bottom:16px; opacity:0.6; text-transform:uppercase; font-size:13px; letter-spacing:1px;">${formatDate(ev.date)}</div>
                                 <p>${ev.description}</p>
                                 ${allLinksHtml(ev)}
+                                ${rsvpSectionHtml(ev.id)}
                             </div>
                         </div>
                     </div>
