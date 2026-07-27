@@ -383,6 +383,54 @@
             opacity: 0.5;
             padding: 60px 0;
         }
+        /* Past events (collapsible) */
+        .past-events-section {
+            margin-top: 50px;
+        }
+        .past-events-toggle {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+            padding: 16px 24px;
+            font-size: 12px;
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background 0.3s, border-color 0.3s;
+            font-family: inherit;
+        }
+        .past-events-toggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .past-events-toggle .chevron {
+            font-size: 12px;
+            transition: transform 0.3s ease;
+            opacity: 0.6;
+        }
+        .past-events-toggle.open .chevron {
+            transform: rotate(180deg);
+        }
+        .past-events-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+        .past-events-content.open {
+            max-height: 10000px;
+        }
+        .past-events-content-inner {
+            padding-top: 24px;
+        }
+        .past-events-content .event-row-title,
+        .past-events-content .event-row-date {
+            opacity: 0.75;
+        }
         @media (max-width: 768px) {
             header { padding: 20px 30px; }
             main { padding: 140px 20px 80px; }
@@ -476,21 +524,16 @@
             </button>
         </div>
     </header>
-
     <div id="pageContent">
         <main>
             <h1 class="page-title">Events</h1>
-
             <div id="nextEventWrap"></div>
-
             <div class="view-toggle">
-                <button id="listViewBtn" class="active">List</button>
-                <button id="calendarViewBtn">Calendar</button>
+                <button id="listViewBtn">List</button>
+                <button id="calendarViewBtn" class="active">Calendar</button>
             </div>
-
-            <div id="listView"></div>
-
-            <div id="calendarView" class="hidden">
+            <div id="listView" class="hidden"></div>
+            <div id="calendarView">
                 <div class="calendar-nav">
                     <button id="prevMonth">&larr;</button>
                     <div class="calendar-month-label" id="calendarMonthLabel"></div>
@@ -499,10 +542,21 @@
                 <div class="calendar-grid" id="calendarGrid"></div>
                 <div id="calendarDetail"></div>
             </div>
+            <div id="pastEventsSection" class="past-events-section hidden">
+                <button type="button" id="pastEventsToggle" class="past-events-toggle" aria-expanded="false">
+                    <span>Past Events</span>
+                    <span class="chevron">&#9662;</span>
+                </button>
+                <div id="pastEventsContent" class="past-events-content">
+                    <div class="past-events-content-inner">
+                        <div id="pastEventsList"></div>
+                    </div>
+                </div>
+            </div>
         </main>
         <footer>
             <div class="dev-credit">
-            © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.</br>                
+            © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.</br>
                 <a href="mailto:drenfx@atomicmail.io?subject=Freeman%20Guild%20Site%20--%20Inquiry%20_________" class="dev-credit-link">
                     <span class="dev-credit-text">Developed and Designed by</span>
                     <img src="DRENFXLOGO-1.png" alt="DRENFX" class="dev-credit-logo">
@@ -510,7 +564,6 @@
             </div>
         </footer>
     </div>
-
     <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script>
         // Events are managed by admins on admin.html and stored in Supabase —
@@ -518,7 +571,6 @@
         const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         (async function gate() {
             let session;
             try {
@@ -545,7 +597,6 @@
             }
             await initEventsPage();
         })();
-
         // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
         const headerAvatarWrap = document.getElementById('headerAvatarWrap');
         const headerAvatarBtn = document.getElementById('headerAvatarBtn');
@@ -554,7 +605,6 @@
         const headerAvatarMenu = document.getElementById('headerAvatarMenu');
         const headerLogoutBtn = document.getElementById('headerLogoutBtn');
         const navAdminLink = document.getElementById('navAdminLink');
-
         function applyHeaderAuthUI(profile) {
             if (!profile || !headerAvatarBtn) return;
             headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -572,7 +622,6 @@
                 navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
             }
         }
-
         function closeHeaderAvatarMenu() {
             if (!headerAvatarMenu) return;
             headerAvatarMenu.classList.add('hidden');
@@ -608,7 +657,6 @@
                 window.location.href = 'members.html';
             });
         }
-
         async function fetchEvents() {
             const { data, error } = await supabase
                 .from('events')
@@ -628,41 +676,40 @@
                 extraLinkLabel: e.extra_link_label || ''
             }));
         }
-
         // ---- Page logic (only runs after auth confirmed) ----
         async function initEventsPage() {
             const events = await fetchEvents();
             const sorted = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            // An event counts as "past" once its day has fully elapsed.
             const upcoming = sorted.filter(e => new Date(e.date + 'T23:59:59') >= today);
+            const past = sorted
+                .filter(e => new Date(e.date + 'T23:59:59') < today)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
             const nextEvent = upcoming[0] || sorted[sorted.length - 1];
-
             renderNextEvent(nextEvent);
-            renderListView(sorted);
+            renderListView(upcoming);
+            renderPastEventsView(past);
             initCalendar(sorted);
             initViewToggle();
+            initPastEventsToggle();
         }
-
         function formatDate(dateStr) {
             const d = new Date(dateStr + 'T00:00:00');
             return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
         }
-
         function fbLinkHtml(url) {
             if (!url) return '';
             return `<a href="${url}" target="_blank" rel="noopener" class="fb-link">View on Facebook</a>`;
         }
-
         function extraLinkHtml(url, label) {
             if (!url) return '';
             return `<a href="${url}" target="_blank" rel="noopener" class="fb-link">${label || 'More Info'}</a>`;
         }
-
         function allLinksHtml(event) {
             return `${fbLinkHtml(event.facebookUrl)} ${extraLinkHtml(event.extraLinkUrl, event.extraLinkLabel)}`;
         }
-
         function renderNextEvent(event) {
             const wrap = document.getElementById('nextEventWrap');
             if (!event) {
@@ -682,11 +729,10 @@
                 </div>
             `;
         }
-
         function renderListView(events) {
             const listView = document.getElementById('listView');
             if (!events.length) {
-                listView.innerHTML = '<div class="empty-state">No events posted yet.</div>';
+                listView.innerHTML = '<div class="empty-state">No upcoming events.</div>';
                 return;
             }
             listView.innerHTML = `<div class="event-list">${events.map(e => `
@@ -707,18 +753,63 @@
                 </div>
             `).join('')}</div>`;
         }
-
+        function renderPastEventsView(events) {
+            const section = document.getElementById('pastEventsSection');
+            const list = document.getElementById('pastEventsList');
+            if (!events.length) {
+                section.classList.add('hidden');
+                list.innerHTML = '';
+                return;
+            }
+            section.classList.remove('hidden');
+            list.innerHTML = `<div class="event-list">${events.map(e => `
+                <div>
+                    <div class="event-row" onclick="togglePastEventRow('${e.date}')">
+                        <div class="event-row-title">${e.title}</div>
+                        <div class="event-row-date">${formatDate(e.date)}</div>
+                    </div>
+                    <div class="event-detail" id="past-detail-${e.date}">
+                        <div class="event-detail-inner">
+                            <img src="${e.flyer}" alt="${e.title}">
+                            <div>
+                                <p>${e.description}</p>
+                                ${allLinksHtml(e)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}</div>`;
+        }
         function toggleEventRow(dateKey) {
             const detail = document.getElementById(`detail-${dateKey}`);
             if (!detail) return;
             const isOpen = detail.classList.contains('open');
-            document.querySelectorAll('.event-detail.open').forEach(d => d.classList.remove('open'));
+            document.querySelectorAll('#listView .event-detail.open').forEach(d => d.classList.remove('open'));
             if (!isOpen) {
                 detail.classList.add('open');
                 detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
-
+        function togglePastEventRow(dateKey) {
+            const detail = document.getElementById(`past-detail-${dateKey}`);
+            if (!detail) return;
+            const isOpen = detail.classList.contains('open');
+            document.querySelectorAll('#pastEventsList .event-detail.open').forEach(d => d.classList.remove('open'));
+            if (!isOpen) {
+                detail.classList.add('open');
+                detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+        function initPastEventsToggle() {
+            const toggle = document.getElementById('pastEventsToggle');
+            const content = document.getElementById('pastEventsContent');
+            if (!toggle || !content) return;
+            toggle.addEventListener('click', () => {
+                const isOpen = content.classList.toggle('open');
+                toggle.classList.toggle('open', isOpen);
+                toggle.setAttribute('aria-expanded', String(isOpen));
+            });
+        }
         function initViewToggle() {
             const listBtn = document.getElementById('listViewBtn');
             const calBtn = document.getElementById('calendarViewBtn');
@@ -737,20 +828,15 @@
                 listView.classList.add('hidden');
             });
         }
-
         function initCalendar(events) {
             const eventsByDate = {};
             events.forEach(e => { eventsByDate[e.date] = e; });
-
             let current = new Date();
             current.setDate(1);
-
             const grid = document.getElementById('calendarGrid');
             const monthLabel = document.getElementById('calendarMonthLabel');
             const detailWrap = document.getElementById('calendarDetail');
-
             function pad(n) { return String(n).padStart(2, '0'); }
-
             function render() {
                 monthLabel.textContent = current.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                 const year = current.getFullYear();
@@ -758,10 +844,8 @@
                 const firstDay = new Date(year, month, 1);
                 const startOffset = firstDay.getDay();
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
-
                 let cells = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
                     .map(d => `<div class="calendar-dow">${d}</div>`).join('');
-
                 for (let i = 0; i < startOffset; i++) {
                     cells += `<div class="calendar-day"></div>`;
                 }
@@ -782,7 +866,6 @@
                 }
                 grid.innerHTML = cells;
             }
-
             window.showCalendarDetail = function (dateKey) {
                 const ev = eventsByDate[dateKey];
                 if (!ev) { detailWrap.innerHTML = ''; return; }
@@ -801,7 +884,6 @@
                 `;
                 detailWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             };
-
             document.getElementById('prevMonth').addEventListener('click', () => {
                 current.setMonth(current.getMonth() - 1);
                 render();
@@ -810,10 +892,8 @@
                 current.setMonth(current.getMonth() + 1);
                 render();
             });
-
             render();
         }
-
         // Hamburger menu toggle
         const hamburger = document.getElementById('hamburger');
         const mainNav = document.getElementById('mainNav');
