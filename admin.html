@@ -6,6 +6,7 @@
 <title>Admin — Freeman Guild</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="document.getElementById('loadingView').innerHTML='Failed to load required library. Please refresh, or check your connection.'"></script>
 <script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -652,6 +653,7 @@
     <nav id="mainNav">
       <a href="index.html">Home</a>
       <a href="index.html#about">About</a>
+      <a href="index.html#philosophy">Philosophy</a>
       <a href="merch.html">Merch</a>
       <a href="members.html">Members</a>
       <a href="events.html" id="navEventsLink" class="hidden">Events</a>
@@ -831,6 +833,9 @@
     </button>
     <div class="section-body" id="membersSectionBody">
       <div id="tableStatus" class="table-status-msg"></div>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+        <button type="button" id="exportMembersBtn" style="width:auto; padding:10px 24px; margin:0;">Export to Excel</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -1479,6 +1484,32 @@ window.__freemanAdminInit = true;
       addEventBtn.disabled = false;
       addEventBtn.textContent = originalLabel;
     }
+  });
+  // ---- Export members list to a real .xlsx file (via SheetJS, loaded from CDN) ----
+  document.getElementById('exportMembersBtn').addEventListener('click', () => {
+    if (!window.XLSX) {
+      showStatus(tableStatus, 'Export library failed to load — check your connection and refresh.', true);
+      return;
+    }
+    if (!allMembers.length) {
+      showStatus(tableStatus, 'No members to export.', true);
+      return;
+    }
+    const rows = allMembers.map(m => ({
+      Name: m.name || '',
+      Email: m.email || '',
+      'Membership Status': m.membership_status === 'active' ? 'Active' : 'Pending',
+      'Membership Date': m.membership_date ? formatDate(m.membership_date) : ''
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    worksheet['!cols'] = [
+      { wch: 22 }, { wch: 28 }, { wch: 16 }, { wch: 16 }
+    ];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Members');
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `freeman-guild-members-${dateStamp}.xlsx`);
+    showStatus(tableStatus, 'Export downloaded.');
   });
   function renderStats() {
     const total = allMembers.length;
