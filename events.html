@@ -504,6 +504,7 @@
                 <a href="merch.html">Merch</a>
                 <a href="members.html">Members</a>
                 <a href="events.html">Events</a>
+                <a href="forum.html" id="navForumLink" class="hidden">Forum</a>
                 <a href="admin.html" id="navAdminLink" class="hidden">Admin</a>
                 <a href="index.html#contact" class="hidden">Contact</a>
             </nav>
@@ -605,6 +606,7 @@
         const headerAvatarMenu = document.getElementById('headerAvatarMenu');
         const headerLogoutBtn = document.getElementById('headerLogoutBtn');
         const navAdminLink = document.getElementById('navAdminLink');
+        const navForumLink = document.getElementById('navForumLink');
         function applyHeaderAuthUI(profile) {
             if (!profile || !headerAvatarBtn) return;
             headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -620,6 +622,10 @@
             }
             if (navAdminLink) {
                 navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
+            }
+            if (navForumLink) {
+                const tags = profile.tags || [];
+                navForumLink.classList.toggle('hidden', !(tags.includes('member') || tags.includes('founder') || tags.includes('admin')));
             }
         }
         function closeHeaderAvatarMenu() {
