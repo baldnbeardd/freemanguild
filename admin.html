@@ -232,6 +232,13 @@
     transition: max-height 0.5s ease;
   }
   .section-body.open { max-height: 20000px; }
+  .subsection-label {
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 11px;
+    color: var(--muted);
+    margin: 30px 0 12px;
+  }
   .loading, .denied {
     text-align: center;
     color: var(--muted);
@@ -769,6 +776,21 @@
           <tbody id="eventRows"></tbody>
         </table>
       </div>
+      <div class="subsection-label">Past Events</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Facebook</th>
+              <th>Added</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pastEventRows"></tbody>
+        </table>
+      </div>
     </div>
     <button type="button" class="section-title-toggle" data-target="categoriesSectionBody" aria-expanded="false">
       <span>Forum Categories</span>
@@ -1166,17 +1188,30 @@ window.__freemanAdminInit = true;
     renderEventsTable();
   }
   function renderEventsTable() {
-    const tbody = document.getElementById('eventRows');
+    // An event counts as "past" once its day has fully elapsed — matches the
+    // cutoff logic used on events.html.
+    const todayCutoff = new Date();
+    todayCutoff.setHours(0, 0, 0, 0);
+    const upcoming = allEvents.filter(ev => new Date(ev.event_date + 'T23:59:59') >= todayCutoff);
+    const past = allEvents
+      .filter(ev => new Date(ev.event_date + 'T23:59:59') < todayCutoff)
+      .sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
+    renderEventRows('eventRows', upcoming, { editable: true, emptyText: 'No upcoming events.' });
+    renderEventRows('pastEventRows', past, { editable: false, emptyText: 'No past events.' });
+  }
+  function renderEventRows(tbodyId, events, opts) {
+    const tbody = document.getElementById(tbodyId);
     tbody.innerHTML = '';
-    if (!allEvents.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="empty-note">No events yet.</td></tr>`;
+    if (!events.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-note">${opts.emptyText}</td></tr>`;
       return;
     }
-    allEvents.forEach(ev => {
+    events.forEach(ev => {
       const tr = document.createElement('tr');
       const fbCell = ev.facebook_url
         ? `<a href="${ev.facebook_url}" target="_blank" rel="noopener">Link</a>`
         : '<span class="muted">—</span>';
+      const editBtnHtml = opts.editable ? `<button type="button" class="btn-edit" data-id="${ev.id}">Edit</button>` : '';
       tr.innerHTML = `
         <td data-label="Title">${ev.title}</td>
         <td class="muted" data-label="Date">${formatDate(ev.event_date)}</td>
@@ -1184,20 +1219,22 @@ window.__freemanAdminInit = true;
         <td class="muted" data-label="Added">${formatDate(ev.created_at)}</td>
         <td data-label="Actions">
           <div class="row-actions">
-            <button type="button" class="btn-edit" data-id="${ev.id}">Edit</button>
+            ${editBtnHtml}
             <button type="button" class="btn-delete" data-id="${ev.id}">Delete</button>
           </div>
         </td>
       `;
       tbody.appendChild(tr);
     });
-    tbody.querySelectorAll('.btn-edit').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.target.dataset.id;
-        const ev = allEvents.find(x => x.id === id);
-        if (ev) openEventEditModal(ev);
+    if (opts.editable) {
+      tbody.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.target.dataset.id;
+          const ev = allEvents.find(x => x.id === id);
+          if (ev) openEventEditModal(ev);
+        });
       });
-    });
+    }
     tbody.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.target.dataset.id;
