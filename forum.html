@@ -181,6 +181,42 @@
             color: #fff;
             border-bottom: 1px solid #fff;
         }
+        /* Search */
+        .search-box {
+            margin-bottom: 40px;
+        }
+        .search-box input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e0e0e0;
+            padding: 14px 18px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .search-box input::placeholder {
+            color: rgba(224, 224, 224, 0.4);
+        }
+        /* Tags */
+        .tag-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .tag-pill {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(224, 224, 224, 0.7);
+            background: rgba(255, 255, 255, 0.03);
+        }
         /* Category grid */
         .category-grid {
             display: grid;
@@ -554,6 +590,14 @@
                 <a href="members.html">Visit your member dashboard</a>
             </div>
             <div id="forumApp" class="hidden">
+                <div class="search-box">
+                    <input type="text" id="forumSearchInput" placeholder="Search all threads by title, body, or tag…">
+                </div>
+                <!-- Search results view -->
+                <div id="searchResultsView" class="hidden">
+                    <button class="back-btn" id="backFromSearch">&larr; Categories</button>
+                    <div id="searchResultsList" style="margin-top:24px;"></div>
+                </div>
                 <!-- Category view -->
                 <div id="categoryView">
                     <div class="category-grid" id="categoryGrid"></div>
@@ -567,6 +611,7 @@
                     </div>
                     <div id="newThreadForm" class="form-box hidden">
                         <input type="text" id="newThreadTitle" placeholder="Thread title">
+                        <input type="text" id="newThreadTags" placeholder="Tags, comma separated (e.g. gear, tips, grand-rapids)">
                         <textarea id="newThreadBody" placeholder="What's on your mind?"></textarea>
                         <div class="form-actions">
                             <button class="action-btn" id="submitThreadBtn">Post Thread</button>
@@ -609,6 +654,10 @@
         let currentCategory = null;
         let currentThread = null;
         let currentPosts = [];
+        let allCategories = [];
+        // Cache of every thread (all categories), lazily loaded for search and
+        // invalidated whenever a thread is created, deleted, or replied to.
+        let allThreadsCache = null;
         // Avatar cache keyed by user id, populated from `member_public_profiles`
         // (a view that only exposes id/name/avatar_url — same one used for
         // RSVP avatars on events.html — so we don't need broad profiles access).
@@ -742,6 +791,38 @@
                 ? `<span class="post-avatar"><img src="${avatarUrl}" alt="${name}"></span>`
                 : `<span class="post-avatar"><span class="post-avatar-placeholder">${initial}</span></span>`;
         }
+        // ---- Tags ----
+        function tagsHtml(tags) {
+            if (!tags || !tags.length) return '';
+            return `<div class="tag-pills">${tags.map(tag => `<span class="tag-pill">${tag}</span>`).join('')}</div>`;
+        }
+        function parseTagsInput(raw) {
+            if (!raw) return [];
+            return [...new Set(raw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean))];
+        }
+        function categoryNameById(id) {
+            const cat = allCategories.find(c => c.id === id);
+            return cat ? cat.name : 'Uncategorized';
+        }
+        // Shared thread-row markup for both the per-category list and search results.
+        function threadRowHtml(t, opts) {
+            opts = opts || {};
+            const metaParts = [`by ${t.author_name}`, formatDateTime(t.created_at)];
+            if (opts.showCategory) metaParts.push(categoryNameById(t.category_id));
+            return `
+                <div class="thread-row" data-id="${t.id}" data-category-id="${t.category_id}">
+                    <div class="thread-row-author">
+                        ${avatarHtml(t.author_name, t.author_id)}
+                        <div>
+                            <div class="thread-row-title">${t.title}</div>
+                            <div class="thread-row-meta">${metaParts.join(' · ')}</div>
+                            ${tagsHtml(t.tags)}
+                        </div>
+                    </div>
+                    <div class="thread-row-stats">${t.reply_count} repl${t.reply_count === 1 ? 'y' : 'ies'}<br>last activity ${formatDateTime(t.last_activity_at)}</div>
+                </div>
+            `;
+        }
         async function loadCategories() {
             const { data, error } = await supabase
                 .from('forum_categories')
@@ -750,8 +831,10 @@
             const grid = document.getElementById('categoryGrid');
             if (error) {
                 grid.innerHTML = `<div class="empty-state">Could not load categories: ${error.message}</div>`;
+                allCategories = [];
                 return;
             }
+            allCategories = data || [];
             if (!data || !data.length) {
                 grid.innerHTML = '<div class="empty-state">No categories yet.</div>';
                 return;
@@ -786,7 +869,7 @@
             const listEl = document.getElementById('threadList');
             const { data, error } = await supabase
                 .from('forum_threads')
-                .select('id, title, author_id, author_name, created_at, last_activity_at, reply_count')
+                .select('id, title, author_id, author_name, category_id, tags, created_at, last_activity_at, reply_count')
                 .eq('category_id', currentCategory.id)
                 .order('last_activity_at', { ascending: false });
             if (error) {
@@ -798,18 +881,7 @@
                 return;
             }
             await ensureAvatars(data.map(t => t.author_id));
-            listEl.innerHTML = `<div class="thread-list">${data.map(t => `
-                <div class="thread-row" data-id="${t.id}">
-                    <div class="thread-row-author">
-                        ${avatarHtml(t.author_name, t.author_id)}
-                        <div>
-                            <div class="thread-row-title">${t.title}</div>
-                            <div class="thread-row-meta">by ${t.author_name} · ${formatDateTime(t.created_at)}</div>
-                        </div>
-                    </div>
-                    <div class="thread-row-stats">${t.reply_count} repl${t.reply_count === 1 ? 'y' : 'ies'}<br>last activity ${formatDateTime(t.last_activity_at)}</div>
-                </div>
-            `).join('')}</div>`;
+            listEl.innerHTML = `<div class="thread-list">${data.map(t => threadRowHtml(t)).join('')}</div>`;
             listEl.querySelectorAll('.thread-row').forEach(row => {
                 row.addEventListener('click', () => openThread(row.dataset.id));
             });
@@ -825,11 +897,13 @@
         document.getElementById('cancelThreadBtn').addEventListener('click', () => {
             document.getElementById('newThreadForm').classList.add('hidden');
             document.getElementById('newThreadTitle').value = '';
+            document.getElementById('newThreadTags').value = '';
             document.getElementById('newThreadBody').value = '';
         });
         document.getElementById('submitThreadBtn').addEventListener('click', async () => {
             const title = document.getElementById('newThreadTitle').value.trim();
             const body = document.getElementById('newThreadBody').value.trim();
+            const tags = parseTagsInput(document.getElementById('newThreadTags').value);
             if (!title || !body) return;
             const btn = document.getElementById('submitThreadBtn');
             btn.disabled = true;
@@ -837,6 +911,7 @@
                 category_id: currentCategory.id,
                 title,
                 body,
+                tags,
                 author_id: currentUser.id,
                 author_name: currentUser.name
             });
@@ -846,16 +921,20 @@
                 return;
             }
             document.getElementById('newThreadTitle').value = '';
+            document.getElementById('newThreadTags').value = '';
             document.getElementById('newThreadBody').value = '';
             document.getElementById('newThreadForm').classList.add('hidden');
+            allThreadsCache = null;
             await loadThreads();
         });
         async function openThread(threadId) {
+            document.getElementById('categoryView').classList.add('hidden');
+            document.getElementById('searchResultsView').classList.add('hidden');
             document.getElementById('threadListView').classList.add('hidden');
             document.getElementById('threadDetailView').classList.remove('hidden');
             const { data: thread, error } = await supabase
                 .from('forum_threads')
-                .select('id, title, body, author_id, author_name, created_at')
+                .select('id, title, body, author_id, author_name, tags, created_at')
                 .eq('id', threadId)
                 .single();
             if (error || !thread) {
@@ -875,7 +954,8 @@
                     ${avatarHtml(thread.author_name, thread.author_id)}
                     <span>by ${thread.author_name} · ${formatDateTime(thread.created_at)}${canDelete ? ` · <button class="delete-link" id="deleteThreadBtn">Delete Thread</button>` : ''}</span>
                 </div>
-                <div class="post-body">${thread.body}</div>
+                ${tagsHtml(thread.tags)}
+                <div class="post-body" style="margin-top:16px;">${thread.body}</div>
                 <div class="reaction-bar" id="reactionBar-thread-${thread.id}"></div>
             `;
             const deleteBtn = document.getElementById('deleteThreadBtn');
@@ -887,6 +967,7 @@
                         alert('Could not delete thread: ' + error.message);
                         return;
                     }
+                    allThreadsCache = null;
                     document.getElementById('threadDetailView').classList.add('hidden');
                     document.getElementById('threadListView').classList.remove('hidden');
                     await loadThreads();
@@ -1054,7 +1135,70 @@
                 return;
             }
             document.getElementById('replyBody').value = '';
+            allThreadsCache = null;
             await loadPosts(currentThread.id);
+        });
+        // ---- Search (client-side, over every category's threads) ----
+        async function loadAllThreadsForSearch() {
+            if (allThreadsCache) return allThreadsCache;
+            const { data, error } = await supabase
+                .from('forum_threads')
+                .select('id, title, body, author_id, author_name, category_id, tags, created_at, last_activity_at, reply_count')
+                .order('last_activity_at', { ascending: false });
+            if (error) {
+                console.warn('Could not load threads for search:', error);
+                return [];
+            }
+            allThreadsCache = data || [];
+            return allThreadsCache;
+        }
+        function exitSearch() {
+            document.getElementById('searchResultsView').classList.add('hidden');
+            document.getElementById('categoryView').classList.remove('hidden');
+        }
+        async function runSearch(query) {
+            if (!query) {
+                exitSearch();
+                return;
+            }
+            document.getElementById('categoryView').classList.add('hidden');
+            document.getElementById('threadListView').classList.add('hidden');
+            document.getElementById('threadDetailView').classList.add('hidden');
+            const resultsView = document.getElementById('searchResultsView');
+            const resultsList = document.getElementById('searchResultsList');
+            resultsView.classList.remove('hidden');
+            resultsList.innerHTML = '<div class="empty-state">Searching…</div>';
+            const threads = await loadAllThreadsForSearch();
+            const q = query.toLowerCase();
+            const matches = threads.filter(t => {
+                const inTitle = (t.title || '').toLowerCase().includes(q);
+                const inBody = (t.body || '').toLowerCase().includes(q);
+                const inTags = (t.tags || []).some(tag => tag.toLowerCase().includes(q));
+                return inTitle || inBody || inTags;
+            });
+            if (!matches.length) {
+                resultsList.innerHTML = '<div class="empty-state">No threads match your search.</div>';
+                return;
+            }
+            await ensureAvatars(matches.map(t => t.author_id));
+            resultsList.innerHTML = `<div class="thread-list">${matches.map(t => threadRowHtml(t, { showCategory: true })).join('')}</div>`;
+            resultsList.querySelectorAll('.thread-row').forEach(row => {
+                row.addEventListener('click', async () => {
+                    const catId = row.dataset.categoryId;
+                    currentCategory = allCategories.find(c => c.id === catId) || { id: catId, name: categoryNameById(catId) };
+                    await openThread(row.dataset.id);
+                });
+            });
+        }
+        let searchDebounceTimer = null;
+        document.getElementById('forumSearchInput').addEventListener('input', (e) => {
+            clearTimeout(searchDebounceTimer);
+            const query = e.target.value.trim();
+            searchDebounceTimer = setTimeout(() => runSearch(query), 250);
+        });
+        document.getElementById('backFromSearch').addEventListener('click', () => {
+            document.getElementById('forumSearchInput').value = '';
+            exitSearch();
         });
         // Hamburger menu toggle
         const hamburger = document.getElementById('hamburger');
