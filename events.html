@@ -687,7 +687,7 @@
             const past = sorted
                 .filter(e => new Date(e.date + 'T23:59:59') < today)
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
-            const nextEvent = upcoming[0] || sorted[sorted.length - 1];
+            const nextEvent = upcoming[0] || null;
             renderNextEvent(nextEvent);
             renderListView(upcoming);
             renderPastEventsView(past);
