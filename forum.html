@@ -262,6 +262,12 @@
         .thread-row:hover {
             background: rgba(255, 255, 255, 0.03);
         }
+        .thread-row-author {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
         .thread-row-title {
             font-size: 16px;
             font-weight: 300;
@@ -321,6 +327,9 @@
             margin-bottom: 10px;
         }
         .thread-detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 12px;
             opacity: 0.5;
             text-transform: uppercase;
@@ -338,6 +347,35 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 14px;
+        }
+        .post-author-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .post-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #151515;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .post-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .post-avatar-placeholder {
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.7;
+            text-transform: uppercase;
         }
         .post-author {
             font-size: 13px;
@@ -507,23 +545,19 @@
             </button>
         </div>
     </header>
-
     <div id="pageContent">
         <main>
             <h1 class="page-title">Forum</h1>
-
             <div id="deniedView" class="hidden denied">
                 The forum is available to active members only.
                 <br><br>
                 <a href="members.html">Visit your member dashboard</a>
             </div>
-
             <div id="forumApp" class="hidden">
                 <!-- Category view -->
                 <div id="categoryView">
                     <div class="category-grid" id="categoryGrid"></div>
                 </div>
-
                 <!-- Thread list view -->
                 <div id="threadListView" class="hidden">
                     <button class="back-btn" id="backToCategories">&larr; Categories</button>
@@ -531,7 +565,6 @@
                         <h2 id="currentCategoryTitle"></h2>
                         <button class="action-btn" id="newThreadBtn">New Thread</button>
                     </div>
-
                     <div id="newThreadForm" class="form-box hidden">
                         <input type="text" id="newThreadTitle" placeholder="Thread title">
                         <textarea id="newThreadBody" placeholder="What's on your mind?"></textarea>
@@ -540,10 +573,8 @@
                             <button class="back-btn" id="cancelThreadBtn">Cancel</button>
                         </div>
                     </div>
-
                     <div id="threadList"></div>
                 </div>
-
                 <!-- Thread detail view -->
                 <div id="threadDetailView" class="hidden">
                     <button class="back-btn" id="backToThreads">&larr; Back to Threads</button>
@@ -560,7 +591,7 @@
         </main>
         <footer>
             <div class="dev-credit">
-            © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.</br>                
+            © 2026 FREEMAN GUILD. ALL RIGHTS RESERVED.</br>
                 <a href="mailto:drenfx@atomicmail.io?subject=Freeman%20Guild%20Site%20--%20Inquiry%20_________" class="dev-credit-link">
                     <span class="dev-credit-text">Developed and Designed by</span>
                     <img src="DRENFXLOGO-1.png" alt="DRENFX" class="dev-credit-logo">
@@ -568,25 +599,26 @@
             </div>
         </footer>
     </div>
-
     <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script>
         const SUPABASE_URL = 'https://psigpaxopesgwnnjoxvc.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_czFc4uRTQu2Ego2_tjoygQ_lhq6bNCo';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let currentUser = null; // { id, name }
         let isAdmin = false;
         let currentCategory = null;
         let currentThread = null;
         let currentPosts = [];
+        // Avatar cache keyed by user id, populated from `member_public_profiles`
+        // (a view that only exposes id/name/avatar_url — same one used for
+        // RSVP avatars on events.html — so we don't need broad profiles access).
+        let avatarCache = {};
         const REACTIONS = [
             { key: 'thumbs_up', emoji: '👍' },
             { key: 'thumbs_down', emoji: '👎' },
             { key: 'exclamation', emoji: '❗' },
             { key: 'laughing', emoji: '😂' }
         ];
-
         (async function gate() {
             let session;
             try {
@@ -601,7 +633,6 @@
                 return;
             }
             document.body.classList.remove('auth-pending');
-
             let profile = null;
             try {
                 const { data } = await supabase
@@ -614,12 +645,10 @@
             } catch (err) {
                 console.warn('Header auth check failed:', err);
             }
-
             const tags = (profile && profile.tags) || [];
             const isMemberOrAbove = tags.includes('member') || tags.includes('founder') || tags.includes('admin');
             isAdmin = tags.includes('admin');
             currentUser = { id: session.user.id, name: (profile && (profile.name || profile.email)) || 'Member' };
-
             if (!isMemberOrAbove) {
                 document.getElementById('deniedView').classList.remove('hidden');
                 return;
@@ -627,7 +656,6 @@
             document.getElementById('forumApp').classList.remove('hidden');
             await loadCategories();
         })();
-
         // ---- Header avatar + Admin nav link (shared pattern across all site pages) ----
         const headerAvatarWrap = document.getElementById('headerAvatarWrap');
         const headerAvatarBtn = document.getElementById('headerAvatarBtn');
@@ -636,7 +664,6 @@
         const headerAvatarMenu = document.getElementById('headerAvatarMenu');
         const headerLogoutBtn = document.getElementById('headerLogoutBtn');
         const navAdminLink = document.getElementById('navAdminLink');
-
         function applyHeaderAuthUI(profile) {
             if (!profile || !headerAvatarBtn) return;
             headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -689,12 +716,32 @@
                 window.location.href = 'members.html';
             });
         }
-
         // ---- Forum logic ----
         function formatDateTime(iso) {
             return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
-
+        // ---- Avatars ----
+        async function ensureAvatars(ids) {
+            const uniqueIds = [...new Set(ids)].filter(id => id && !(id in avatarCache));
+            if (!uniqueIds.length) return;
+            const { data, error } = await supabase
+                .from('member_public_profiles')
+                .select('id, avatar_url')
+                .in('id', uniqueIds);
+            uniqueIds.forEach(id => { avatarCache[id] = null; });
+            if (error) {
+                console.warn('Could not load avatars:', error);
+                return;
+            }
+            (data || []).forEach(p => { avatarCache[p.id] = p.avatar_url || null; });
+        }
+        function avatarHtml(name, authorId) {
+            const avatarUrl = avatarCache[authorId];
+            const initial = (name || '?').trim().charAt(0).toUpperCase();
+            return avatarUrl
+                ? `<span class="post-avatar"><img src="${avatarUrl}" alt="${name}"></span>`
+                : `<span class="post-avatar"><span class="post-avatar-placeholder">${initial}</span></span>`;
+        }
         async function loadCategories() {
             const { data, error } = await supabase
                 .from('forum_categories')
@@ -712,7 +759,6 @@
             const { data: threadRows } = await supabase.from('forum_threads').select('category_id');
             const counts = {};
             (threadRows || []).forEach(t => { counts[t.category_id] = (counts[t.category_id] || 0) + 1; });
-
             grid.innerHTML = data.map(cat => `
                 <div class="category-card" data-id="${cat.id}">
                     <h3>${cat.name}</h3>
@@ -727,7 +773,6 @@
                 });
             });
         }
-
         async function openCategory(category) {
             currentCategory = category;
             document.getElementById('categoryView').classList.add('hidden');
@@ -737,12 +782,11 @@
             document.getElementById('newThreadForm').classList.add('hidden');
             await loadThreads();
         }
-
         async function loadThreads() {
             const listEl = document.getElementById('threadList');
             const { data, error } = await supabase
                 .from('forum_threads')
-                .select('id, title, author_name, created_at, last_activity_at, reply_count')
+                .select('id, title, author_id, author_name, created_at, last_activity_at, reply_count')
                 .eq('category_id', currentCategory.id)
                 .order('last_activity_at', { ascending: false });
             if (error) {
@@ -753,11 +797,15 @@
                 listEl.innerHTML = '<div class="empty-state">No threads yet — start the first one.</div>';
                 return;
             }
+            await ensureAvatars(data.map(t => t.author_id));
             listEl.innerHTML = `<div class="thread-list">${data.map(t => `
                 <div class="thread-row" data-id="${t.id}">
-                    <div>
-                        <div class="thread-row-title">${t.title}</div>
-                        <div class="thread-row-meta">by ${t.author_name} · ${formatDateTime(t.created_at)}</div>
+                    <div class="thread-row-author">
+                        ${avatarHtml(t.author_name, t.author_id)}
+                        <div>
+                            <div class="thread-row-title">${t.title}</div>
+                            <div class="thread-row-meta">by ${t.author_name} · ${formatDateTime(t.created_at)}</div>
+                        </div>
                     </div>
                     <div class="thread-row-stats">${t.reply_count} repl${t.reply_count === 1 ? 'y' : 'ies'}<br>last activity ${formatDateTime(t.last_activity_at)}</div>
                 </div>
@@ -766,13 +814,11 @@
                 row.addEventListener('click', () => openThread(row.dataset.id));
             });
         }
-
         document.getElementById('backToCategories').addEventListener('click', () => {
             document.getElementById('threadListView').classList.add('hidden');
             document.getElementById('categoryView').classList.remove('hidden');
             loadCategories();
         });
-
         document.getElementById('newThreadBtn').addEventListener('click', () => {
             document.getElementById('newThreadForm').classList.toggle('hidden');
         });
@@ -804,7 +850,6 @@
             document.getElementById('newThreadForm').classList.add('hidden');
             await loadThreads();
         });
-
         async function openThread(threadId) {
             document.getElementById('threadListView').classList.add('hidden');
             document.getElementById('threadDetailView').classList.remove('hidden');
@@ -818,17 +863,17 @@
                 return;
             }
             currentThread = thread;
+            await ensureAvatars([thread.author_id]);
             renderThreadDetail(thread);
             await loadPosts(threadId);
         }
-
         function renderThreadDetail(thread) {
             const canDelete = isAdmin || thread.author_id === currentUser.id;
             document.getElementById('threadDetailContent').innerHTML = `
                 <div class="thread-detail-title">${thread.title}</div>
                 <div class="thread-detail-meta">
-                    by ${thread.author_name} · ${formatDateTime(thread.created_at)}
-                    ${canDelete ? ` · <button class="delete-link" id="deleteThreadBtn">Delete Thread</button>` : ''}
+                    ${avatarHtml(thread.author_name, thread.author_id)}
+                    <span>by ${thread.author_name} · ${formatDateTime(thread.created_at)}${canDelete ? ` · <button class="delete-link" id="deleteThreadBtn">Delete Thread</button>` : ''}</span>
                 </div>
                 <div class="post-body">${thread.body}</div>
                 <div class="reaction-bar" id="reactionBar-thread-${thread.id}"></div>
@@ -848,7 +893,6 @@
                 });
             }
         }
-
         async function loadPosts(threadId) {
             const postsEl = document.getElementById('postsList');
             const { data, error } = await supabase
@@ -867,12 +911,16 @@
                 await refreshReactions();
                 return;
             }
+            await ensureAvatars(currentPosts.map(p => p.author_id));
             postsEl.innerHTML = currentPosts.map(p => {
                 const canDelete = isAdmin || p.author_id === currentUser.id;
                 return `
                     <div class="post-card" data-id="${p.id}">
                         <div class="post-card-header">
-                            <span class="post-author">${p.author_name}</span>
+                            <div class="post-author-line">
+                                ${avatarHtml(p.author_name, p.author_id)}
+                                <span class="post-author">${p.author_name}</span>
+                            </div>
                             <span class="post-date">${formatDateTime(p.created_at)}${canDelete ? ` · <button class="delete-link" data-post-id="${p.id}">Delete</button>` : ''}</span>
                         </div>
                         <div class="post-body">${p.body}</div>
@@ -893,7 +941,6 @@
             });
             await refreshReactions();
         }
-
         // ---- Reactions (👍 👎 ❗ 😂 on threads and posts) ----
         function buildReactionMap(rows) {
             const map = {};
@@ -905,7 +952,6 @@
             });
             return map;
         }
-
         async function refreshReactions() {
             if (!currentThread) return;
             const postIds = currentPosts.map(p => p.id);
@@ -925,7 +971,6 @@
             renderReactionBar(`reactionBar-thread-${currentThread.id}`, currentThread.id, 'thread', map);
             currentPosts.forEach(p => renderReactionBar(`reactionBar-post-${p.id}`, p.id, 'post', map));
         }
-
         function renderReactionBar(elId, targetId, targetType, map) {
             const el = document.getElementById(elId);
             if (!el) return;
@@ -947,7 +992,6 @@
                 btn.addEventListener('click', () => toggleReaction(targetId, targetType, reactionKey));
             });
         }
-
         let reactionTooltipEl = null;
         function showReactionTooltip(btn, users) {
             hideReactionTooltip();
@@ -966,7 +1010,6 @@
                 reactionTooltipEl = null;
             }
         }
-
         async function toggleReaction(targetId, targetType, reactionKey) {
             hideReactionTooltip();
             const column = targetType === 'thread' ? 'thread_id' : 'post_id';
@@ -989,13 +1032,11 @@
             }
             await refreshReactions();
         }
-
         document.getElementById('backToThreads').addEventListener('click', () => {
             document.getElementById('threadDetailView').classList.add('hidden');
             document.getElementById('threadListView').classList.remove('hidden');
             loadThreads();
         });
-
         document.getElementById('submitReplyBtn').addEventListener('click', async () => {
             const body = document.getElementById('replyBody').value.trim();
             if (!body || !currentThread) return;
@@ -1015,7 +1056,6 @@
             document.getElementById('replyBody').value = '';
             await loadPosts(currentThread.id);
         });
-
         // Hamburger menu toggle
         const hamburger = document.getElementById('hamburger');
         const mainNav = document.getElementById('mainNav');
