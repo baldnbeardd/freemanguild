@@ -1031,6 +1031,7 @@ window.__freemanAdminInit = true;
       authView.classList.add('hidden');
       checkAdminAndLoad(session.user);
     } else if (event === 'SIGNED_OUT') {
+      dashboardActive = false;
       dashboardView.classList.add('hidden');
       deniedView.classList.add('hidden');
       authView.classList.remove('hidden');
@@ -1053,7 +1054,16 @@ window.__freemanAdminInit = true;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) showStatus(statusMsg, error.message, true);
   });
+  // supabase-js v2 fires an initial SIGNED_IN event from onAuthStateChange as
+  // soon as it's subscribed if a session already exists — on top of init()'s
+  // own getSession() check. Without this guard that runs checkAdminAndLoad()
+  // (and therefore loadDashboard()) twice concurrently, racing the table
+  // renders and producing duplicate rows (e.g. two identical forum
+  // categories) that don't actually exist twice in the database.
+  let dashboardActive = false;
   async function checkAdminAndLoad(user) {
+    if (dashboardActive) return;
+    dashboardActive = true;
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('name, email, avatar_url, membership_status, tags')
@@ -1400,18 +1410,27 @@ window.__freemanAdminInit = true;
       });
     });
   }
-  document.getElementById('addCategoryBtn').addEventListener('click', async () => {
+  const addCategoryBtn = document.getElementById('addCategoryBtn');
+  addCategoryBtn.addEventListener('click', async () => {
     const name = document.getElementById('categoryName').value.trim();
     const description = document.getElementById('categoryDescription').value.trim();
     if (!name) {
       showStatus(categoryFormStatus, 'Category name is required.', true);
       return;
     }
+    if (allCategories.some(c => c.name.trim().toLowerCase() === name.toLowerCase())) {
+      showStatus(categoryFormStatus, `A category named "${name}" already exists.`, true);
+      return;
+    }
+    // Guard against double-clicks (or a slow connection) firing two inserts —
+    // this is what caused duplicate categories before.
+    addCategoryBtn.disabled = true;
     const { error } = await supabase.from('forum_categories').insert({
       name,
       description: description || null,
       sort_order: allCategories.length
     });
+    addCategoryBtn.disabled = false;
     if (error) {
       showStatus(categoryFormStatus, error.message, true);
       return;
