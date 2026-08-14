@@ -381,16 +381,26 @@
             font-size: 11px;
             opacity: 0.4;
         }
+        .image-gif-notice {
+            display: block;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #da3633;
+            opacity: 0.85;
+        }
         .image-preview-wrap {
             position: relative;
             display: inline-block;
             margin-top: 14px;
         }
         .image-preview-wrap img {
-            max-width: 220px;
-            max-height: 220px;
+            width: 160px;
+            height: 160px;
+            object-fit: cover;
             display: block;
             border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 11px;
+            color: rgba(224, 224, 224, 0.5);
         }
         .image-preview-remove {
             position: absolute;
@@ -680,12 +690,13 @@
                         <textarea id="newThreadBody" placeholder="What's on your mind?"></textarea>
                         <div class="image-upload-row">
                             <label class="image-upload-label" for="newThreadImageInput">Add Image</label>
-                            <input type="file" id="newThreadImageInput" accept="image/*" class="hidden">
-                            <span class="image-upload-hint">Images over 1MB are automatically resized.</span>
+                            <input type="file" id="newThreadImageInput" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif" class="hidden">
+                            <span class="image-upload-hint">JPG, PNG, or GIF. Images over 1MB are automatically resized.</span>
                             <div id="newThreadImagePreviewWrap" class="image-preview-wrap hidden">
                                 <img id="newThreadImagePreview" alt="Selected image preview">
                                 <button type="button" id="newThreadImageRemove" class="image-preview-remove" aria-label="Remove image">&times;</button>
                             </div>
+                            <span id="newThreadImageGifNotice" class="image-gif-notice hidden">This GIF is over 1MB and will be flattened to a static image when resized.</span>
                         </div>
                         <div class="form-actions">
                             <button class="action-btn" id="submitThreadBtn">Post Thread</button>
@@ -703,12 +714,13 @@
                         <textarea id="replyBody" placeholder="Write a reply..."></textarea>
                         <div class="image-upload-row">
                             <label class="image-upload-label" for="replyImageInput">Add Image</label>
-                            <input type="file" id="replyImageInput" accept="image/*" class="hidden">
-                            <span class="image-upload-hint">Images over 1MB are automatically resized.</span>
+                            <input type="file" id="replyImageInput" accept="image/jpeg,image/png,image/gif,.jpg,.jpeg,.png,.gif" class="hidden">
+                            <span class="image-upload-hint">JPG, PNG, or GIF. Images over 1MB are automatically resized.</span>
                             <div id="replyImagePreviewWrap" class="image-preview-wrap hidden">
                                 <img id="replyImagePreview" alt="Selected image preview">
                                 <button type="button" id="replyImageRemove" class="image-preview-remove" aria-label="Remove image">&times;</button>
                             </div>
+                            <span id="replyImageGifNotice" class="image-gif-notice hidden">This GIF is over 1MB and will be flattened to a static image when resized.</span>
                         </div>
                         <div class="form-actions">
                             <button class="action-btn" id="submitReplyBtn">Reply</button>
@@ -812,39 +824,56 @@
         }
         // Wires a file input + thumbnail preview + remove button as a reusable
         // image-attachment picker for a form (new thread / reply).
-        function setupImagePicker(inputId, previewWrapId, previewImgId, removeId, onChange) {
+        const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+        const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif'];
+        function isAllowedImageFile(file) {
+            if (ALLOWED_IMAGE_TYPES.includes(file.type)) return true;
+            // Some browsers/OSes leave `type` blank for certain files — fall back to extension.
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            return ALLOWED_IMAGE_EXTENSIONS.includes(ext);
+        }
+        function isGifFile(file) {
+            if (file.type === 'image/gif') return true;
+            return (file.name.split('.').pop() || '').toLowerCase() === 'gif';
+        }
+        function setupImagePicker(inputId, previewWrapId, previewImgId, removeId, gifNoticeId, onChange) {
             const input = document.getElementById(inputId);
             const previewWrap = document.getElementById(previewWrapId);
             const previewImg = document.getElementById(previewImgId);
             const removeBtn = document.getElementById(removeId);
+            const gifNotice = document.getElementById(gifNoticeId);
+            function clear() {
+                onChange(null);
+                input.value = '';
+                previewImg.src = '';
+                previewWrap.classList.add('hidden');
+                if (gifNotice) gifNotice.classList.add('hidden');
+            }
             input.addEventListener('change', () => {
                 const file = input.files[0];
                 if (!file) return;
-                if (!file.type.startsWith('image/')) {
-                    alert('Please choose an image file.');
-                    input.value = '';
+                if (!isAllowedImageFile(file)) {
+                    alert('Please choose a JPG, PNG, or GIF image.');
+                    clear();
                     return;
                 }
                 onChange(file);
                 const reader = new FileReader();
+                reader.onerror = () => {
+                    alert('Could not read that file — please try a different image.');
+                    clear();
+                };
                 reader.onload = (e) => {
                     previewImg.src = e.target.result;
                     previewWrap.classList.remove('hidden');
+                    if (gifNotice) {
+                        gifNotice.classList.toggle('hidden', !(isGifFile(file) && file.size > MAX_IMAGE_BYTES));
+                    }
                 };
                 reader.readAsDataURL(file);
             });
-            removeBtn.addEventListener('click', () => {
-                onChange(null);
-                input.value = '';
-                previewImg.src = '';
-                previewWrap.classList.add('hidden');
-            });
-            return function reset() {
-                onChange(null);
-                input.value = '';
-                previewImg.src = '';
-                previewWrap.classList.add('hidden');
-            };
+            removeBtn.addEventListener('click', clear);
+            return clear;
         }
         const REACTIONS = [
             { key: 'thumbs_up', emoji: '👍' },
@@ -1087,11 +1116,11 @@
             document.getElementById('newThreadForm').classList.toggle('hidden');
         });
         const resetNewThreadImage = setupImagePicker(
-            'newThreadImageInput', 'newThreadImagePreviewWrap', 'newThreadImagePreview', 'newThreadImageRemove',
+            'newThreadImageInput', 'newThreadImagePreviewWrap', 'newThreadImagePreview', 'newThreadImageRemove', 'newThreadImageGifNotice',
             (file) => { newThreadImageFile = file; }
         );
         const resetReplyImage = setupImagePicker(
-            'replyImageInput', 'replyImagePreviewWrap', 'replyImagePreview', 'replyImageRemove',
+            'replyImageInput', 'replyImagePreviewWrap', 'replyImagePreview', 'replyImageRemove', 'replyImageGifNotice',
             (file) => { replyImageFile = file; }
         );
         document.getElementById('cancelThreadBtn').addEventListener('click', () => {
