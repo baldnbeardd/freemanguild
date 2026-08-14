@@ -321,76 +321,6 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             overflow: hidden;
         }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 80px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .stat {
-            text-align: center;
-            padding: 40px 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: border-color 0.3s;
-        }
-        .stat:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-        .stat-number {
-            font-size: clamp(32px, 5vw, 56px);
-            font-weight: 200;
-            margin-bottom: 20px;
-        }
-        .stat-label {
-            font-size: 13px;
-            font-weight: 300;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            opacity: 0.5;
-        }
-        .about-text {
-            text-align: center;
-            max-width: 900px;
-            margin: 0 auto 60px;
-            font-size: 16px;
-            line-height: 1.8;
-            opacity: 0.7;
-        }
-        .principles {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 60px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .principle {
-            padding: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s;
-        }
-        .principle:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            background: rgba(255, 255, 255, 0.01);
-        }
-        .principle-number {
-            font-size: 48px;
-            font-weight: 200;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-        .principle-title {
-            font-size: 20px;
-            font-weight: 400;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .principle-desc {
-            font-size: 14px;
-            line-height: 1.8;
-            opacity: 0.6;
-        }
         /* Footer */
         footer {
             background: rgba(0, 0, 0, 0.5);
@@ -514,9 +444,6 @@
                 grid-template-columns: 1fr;
                 gap: 50px;
             }
-            .stats {
-                gap: 50px;
-            }
         }
         @media (max-width: 480px) {
             header {
@@ -557,12 +484,6 @@
             .section-title {
                 font-size: clamp(28px, 6vw, 48px);
                 margin-bottom: 50px;
-            }
-            .principles {
-                gap: 40px;
-            }
-            .principle {
-                padding: 30px;
             }
             footer {
                 padding: 60px 20px 30px;
@@ -655,7 +576,7 @@
         <div class="nav-wrap">
             <nav id="mainNav">
                 <a href="#home">Home</a>
-                <a href="#about">About</a>
+                <a href="about.html" id="navAboutLink" class="hidden">About</a>
                 <a href="merch.html">Merch</a>
                 <a href="members.html">Members</a>
                 <a href="events.html" id="navEventsLink" class="hidden">Events</a>
@@ -690,63 +611,13 @@
         <div class="hero-content">
             <h1>FREEMAN GUILD</h1>
             <p>WHERE CRAFT MEETS CONSCIOUSNESS</p>
-            <a href="#about" class="cta-button">Explore</a>
+            <a href="about.html" class="cta-button">Explore</a>
         </div>
     </section>
     <!-- Upcoming Event (members only — populated by JS when logged in) -->
     <section class="section hidden" id="upcomingEventSection" style="padding-top:0;">
         <h2 class="section-title" style="margin-bottom:50px;">Upcoming Event</h2>
         <div id="upcomingEventWrap"></div>
-    </section>
-    <!-- About / Vision -->
-    <section class="section" id="about">
-        <!-- <div>
-        <img src="sosticeparty.png" alt="Solstice Party">
-        </div> -->
-        <h2 class="section-title">Our Vision</h2>
-        <p class="about-text">
-            The Freeman Guild is a collective dedicated to excellence, authenticity, and the pursuit of meaningful events that transcends the ordinary.
-        </p>
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-number">2019</div>
-                <div class="stat-label">Founded</div>
-            </div>
-            <div class="stat">
-                <div class="stat-number">650+</div>
-                <div class="stat-label">Members</div>
-            </div>
-            <div class="stat">
-                <div class="stat-number">150+</div>
-                <div class="stat-label">Events</div>
-            </div>
-        </div>
-    </section>
-    <!-- Philosophy -->
-    <section class="section" id="philosophy">
-        <h2 class="section-title">Core Principles</h2>
-        <div class="principles">
-            <div class="principle">
-                <div class="principle-number">01</div>
-                <div class="principle-title">Community</div>
-                <div class="principle-desc">Every decision guided by purpose and thoughtful consideration, with safety and freedom of expression as a guiding light.</div>
-            </div>
-            <div class="principle">
-                <div class="principle-number">02</div>
-                <div class="principle-title">Intentionality</div>
-                <div class="principle-desc">Event curation that provides for an experience unlike any other in West Michigan.</div>
-            </div>
-            <div class="principle">
-                <div class="principle-number">03</div>
-                <div class="principle-title">Authenticity</div>
-                <div class="principle-desc">Where curators and creatives join forces for like-minded members.</div>
-            </div>
-            <div class="principle">
-                <div class="principle-number">04</div>
-                <div class="principle-title">Excellence</div>
-                <div class="principle-desc">Unwavering commitment to quality and continuous refinement.</div>
-            </div>
-        </div>
     </section>
     <!-- Flyer Popup
     <div class="flyer-overlay" id="flyerOverlay">
@@ -836,7 +707,7 @@
             });
         }, { threshold: 0.15 });
         // Observe elements for animation
-        document.querySelectorAll('.section-title, .stat, .about-text, .principle').forEach(el => {
+        document.querySelectorAll('.section-title').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(30px)';
             observer.observe(el);
@@ -950,6 +821,7 @@
             const navAdminLink = document.getElementById('navAdminLink');
             const navEventsLink = document.getElementById('navEventsLink');
             const navForumLink = document.getElementById('navForumLink');
+            const navAboutLink = document.getElementById('navAboutLink');
             function applyHeaderAuthUI(profile) {
                 if (!profile || !avatarBtn) return;
                 avatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -973,12 +845,16 @@
                     const tags = profile.tags || [];
                     navForumLink.classList.toggle('hidden', !(tags.includes('member') || tags.includes('founder') || tags.includes('admin')));
                 }
+                if (navAboutLink) {
+                    navAboutLink.classList.remove('hidden');
+                }
             }
             function resetHeaderAuthUI() {
                 if (avatarBtn) avatarBtn.classList.add('hidden');
                 if (navAdminLink) navAdminLink.classList.add('hidden');
                 if (navEventsLink) navEventsLink.classList.add('hidden');
                 if (navForumLink) navForumLink.classList.add('hidden');
+                if (navAboutLink) navAboutLink.classList.add('hidden');
                 sessionStorage.removeItem('membershipLapseNoticeDismissed');
                 const upcomingSection = document.getElementById('upcomingEventSection');
                 if (upcomingSection) upcomingSection.classList.add('hidden');
