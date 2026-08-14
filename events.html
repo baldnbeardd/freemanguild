@@ -74,7 +74,7 @@
             width: 100%;
         }
         .hidden {
-            display: none;
+            display: none !important;
         }
         .header-avatar-wrap {
             position: relative;
@@ -596,7 +596,7 @@
             <nav id="mainNav">
                 <a href="index.html">Home</a>
                 <a href="about.html" id="navAboutLink" class="hidden">About</a>
-                <a href="merch.html">Merch</a>
+                <a href="merch.html" id="navMerchLink" class="hidden">Merch</a>
                 <a href="members.html">Members</a>
                 <a href="events.html">Events</a>
                 <a href="forum.html" id="navForumLink" class="hidden">Forum</a>
@@ -708,6 +708,7 @@
         const navAdminLink = document.getElementById('navAdminLink');
         const navForumLink = document.getElementById('navForumLink');
         const navAboutLink = document.getElementById('navAboutLink');
+        const navMerchLink = document.getElementById('navMerchLink');
         function applyHeaderAuthUI(profile) {
             if (!profile || !headerAvatarBtn) return;
             headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -730,6 +731,9 @@
             }
             if (navAboutLink) {
                 navAboutLink.classList.remove('hidden');
+            }
+            if (navMerchLink) {
+                navMerchLink.classList.remove('hidden');
             }
         }
         function closeHeaderAvatarMenu() {

@@ -143,7 +143,7 @@
             background: rgba(255, 255, 255, 0.08);
         }
         .hidden {
-            display: none;
+            display: none !important;
         }
         .hamburger {
             display: none;
@@ -577,7 +577,7 @@
             <nav id="mainNav">
                 <a href="#home">Home</a>
                 <a href="about.html" id="navAboutLink" class="hidden">About</a>
-                <a href="merch.html">Merch</a>
+                <a href="merch.html" id="navMerchLink" class="hidden">Merch</a>
                 <a href="members.html">Members</a>
                 <a href="events.html" id="navEventsLink" class="hidden">Events</a>
                 <a href="forum.html" id="navForumLink" class="hidden">Forum</a>
@@ -822,6 +822,7 @@
             const navEventsLink = document.getElementById('navEventsLink');
             const navForumLink = document.getElementById('navForumLink');
             const navAboutLink = document.getElementById('navAboutLink');
+            const navMerchLink = document.getElementById('navMerchLink');
             function applyHeaderAuthUI(profile) {
                 if (!profile || !avatarBtn) return;
                 avatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -848,6 +849,9 @@
                 if (navAboutLink) {
                     navAboutLink.classList.remove('hidden');
                 }
+                if (navMerchLink) {
+                    navMerchLink.classList.remove('hidden');
+                }
             }
             function resetHeaderAuthUI() {
                 if (avatarBtn) avatarBtn.classList.add('hidden');
@@ -855,6 +859,7 @@
                 if (navEventsLink) navEventsLink.classList.add('hidden');
                 if (navForumLink) navForumLink.classList.add('hidden');
                 if (navAboutLink) navAboutLink.classList.add('hidden');
+                if (navMerchLink) navMerchLink.classList.add('hidden');
                 sessionStorage.removeItem('membershipLapseNoticeDismissed');
                 const upcomingSection = document.getElementById('upcomingEventSection');
                 if (upcomingSection) upcomingSection.classList.add('hidden');

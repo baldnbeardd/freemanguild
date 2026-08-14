@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freeman Guild Merch</title>
     <meta name="description" content="Freeman Guild official merchandise — Premium t-shirts featuring the iconic Freeman Guild logo.">
+    <meta name="robots" content="noindex">
     <style>
         * {
             margin: 0;
@@ -17,6 +18,10 @@
             color: #e0e0e0;
             line-height: 1.6;
             overflow-x: hidden;
+        }
+        /* Hide everything until auth check resolves, to avoid a content flash */
+        body.auth-pending #pageContent {
+            display: none;
         }
         header {
             position: fixed;
@@ -139,7 +144,7 @@
             background: rgba(255, 255, 255, 0.08);
         }
         .hidden {
-            display: none;
+            display: none !important;
         }
         .hamburger {
             display: none;
@@ -655,7 +660,7 @@
         }
     </style>
 </head>
-<body>
+<body class="auth-pending">
     <!-- Header -->
     <header>
         <a href="index.html" class="logo-link">
@@ -688,6 +693,7 @@
             </button>
         </div>
     </header>
+    <div id="pageContent">
     <!-- Hero -->
     <section class="hero">
         <div class="hero-lines">
@@ -758,6 +764,7 @@
             </a>
         </div></div>
     </footer>
+    </div>
     <script>
         // Header scroll effect
         const header = document.querySelector('header');
@@ -786,9 +793,9 @@
     </script>
     <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script>
-        // Header auth widget: shows the logged-in member's avatar (green/red bordered
-        // by membership status) and reveals the Admin/Events nav links appropriately.
-        // Fails silently if the library or network is unavailable — this is a public page.
+        // Auth gate: this page is for logged-in members only. Also shows the
+        // logged-in member's avatar (green/red bordered by membership status)
+        // and reveals the Admin/Events/Forum/About nav links appropriately.
         if (window.__freemanHeaderAuthInit) {
             console.warn('Header auth script already initialized — skipping duplicate run.');
         } else {
@@ -878,21 +885,31 @@
                     resetHeaderAuthUI();
                 });
             }
-            async function loadHeaderAuth() {
+            (async function gate() {
+                let session;
                 try {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session) return;
+                    ({ data: { session } } = await supabase.auth.getSession());
+                    if (!session) {
+                        window.location.href = 'members.html';
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('Auth check failed, redirecting:', err);
+                    window.location.href = 'members.html';
+                    return;
+                }
+                document.body.classList.remove('auth-pending');
+                try {
                     const { data: profile } = await supabase
                         .from('profiles')
                         .select('name, email, avatar_url, membership_status, tags')
                         .eq('id', session.user.id)
                         .single();
-                    applyHeaderAuthUI(profile);
+                    if (profile) applyHeaderAuthUI(profile);
                 } catch (err) {
                     console.warn('Header auth check failed:', err);
                 }
-            }
-            loadHeaderAuth();
+            })();
         })();
         }
     </script>

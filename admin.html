@@ -543,7 +543,7 @@
     flex-shrink: 0;
   }
   .modal-field-value { text-align: right; word-break: break-word; }
-  .hidden { display: none; }
+  .hidden { display: none !important; }
   /* Add Event form */
   .add-event-form {
     border: 1px solid var(--line);
@@ -653,7 +653,7 @@
     <nav id="mainNav">
       <a href="index.html">Home</a>
       <a href="about.html" id="navAboutLink" class="hidden">About</a>
-      <a href="merch.html">Merch</a>
+      <a href="merch.html" id="navMerchLink" class="hidden">Merch</a>
       <a href="members.html">Members</a>
       <a href="events.html" id="navEventsLink" class="hidden">Events</a>
       <a href="forum.html" id="navForumLink" class="hidden">Forum</a>
@@ -1087,6 +1087,7 @@ window.__freemanAdminInit = true;
   const navEventsLink = document.getElementById('navEventsLink');
   const navForumLink = document.getElementById('navForumLink');
   const navAboutLink = document.getElementById('navAboutLink');
+  const navMerchLink = document.getElementById('navMerchLink');
   function applyHeaderAuthUI(profile) {
     if (!profile || !headerAvatarBtn) return;
     headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -1113,6 +1114,9 @@ window.__freemanAdminInit = true;
     if (navAboutLink) {
       navAboutLink.classList.remove('hidden');
     }
+    if (navMerchLink) {
+      navMerchLink.classList.remove('hidden');
+    }
   }
   function resetHeaderAuthUI() {
     if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
@@ -1120,6 +1124,7 @@ window.__freemanAdminInit = true;
     if (navEventsLink) navEventsLink.classList.add('hidden');
     if (navForumLink) navForumLink.classList.add('hidden');
     if (navAboutLink) navAboutLink.classList.add('hidden');
+    if (navMerchLink) navMerchLink.classList.add('hidden');
     sessionStorage.removeItem('membershipLapseNoticeDismissed');
     closeHeaderAvatarMenu();
   }

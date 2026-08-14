@@ -360,7 +360,7 @@
     padding-bottom: 2px;
   }
   .avatar-label:hover { color: var(--fg); border-color: var(--fg); }
-  .hidden { display: none; }
+  .hidden { display: none !important; }
   .loading { text-align: center; color: var(--muted); padding: 60px 0; letter-spacing: 2px; text-transform: uppercase; font-size: 12px; }
   footer {
     padding: 40px 24px;
@@ -403,7 +403,7 @@
     <nav id="mainNav">
       <a href="index.html">Home</a>
       <a href="about.html" id="navAboutLink" class="hidden">About</a>
-      <a href="merch.html">Merch</a>
+      <a href="merch.html" id="navMerchLink" class="hidden">Merch</a>
       <a href="members.html">Members</a>
       <a href="events.html" id="navEventsLink" class="hidden">Events</a>
       <a href="forum.html" id="navForumLink" class="hidden">Forum</a>
@@ -687,6 +687,7 @@ window.__freemanMembersInit = true;
   const navEventsLink = document.getElementById('navEventsLink');
   const navForumLink = document.getElementById('navForumLink');
   const navAboutLink = document.getElementById('navAboutLink');
+  const navMerchLink = document.getElementById('navMerchLink');
   function applyHeaderAuthUI(profile) {
     if (!profile || !headerAvatarBtn) return;
     headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -713,6 +714,9 @@ window.__freemanMembersInit = true;
     if (navAboutLink) {
       navAboutLink.classList.remove('hidden');
     }
+    if (navMerchLink) {
+      navMerchLink.classList.remove('hidden');
+    }
   }
   function resetHeaderAuthUI() {
     if (headerAvatarBtn) headerAvatarBtn.classList.add('hidden');
@@ -720,6 +724,7 @@ window.__freemanMembersInit = true;
     if (navEventsLink) navEventsLink.classList.add('hidden');
     if (navForumLink) navForumLink.classList.add('hidden');
     if (navAboutLink) navAboutLink.classList.add('hidden');
+    if (navMerchLink) navMerchLink.classList.add('hidden');
     sessionStorage.removeItem('membershipLapseNoticeDismissed');
     closeHeaderAvatarMenu();
   }
