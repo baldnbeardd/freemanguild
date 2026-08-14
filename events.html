@@ -595,7 +595,7 @@
         <div class="nav-wrap">
             <nav id="mainNav">
                 <a href="index.html">Home</a>
-                <a href="index.html#about">About</a>
+                <a href="about.html" id="navAboutLink" class="hidden">About</a>
                 <a href="merch.html">Merch</a>
                 <a href="members.html">Members</a>
                 <a href="events.html">Events</a>
@@ -707,6 +707,7 @@
         const headerLogoutBtn = document.getElementById('headerLogoutBtn');
         const navAdminLink = document.getElementById('navAdminLink');
         const navForumLink = document.getElementById('navForumLink');
+        const navAboutLink = document.getElementById('navAboutLink');
         function applyHeaderAuthUI(profile) {
             if (!profile || !headerAvatarBtn) return;
             headerAvatarBtn.classList.toggle('active', profile.membership_status === 'active');
@@ -726,6 +727,9 @@
             if (navForumLink) {
                 const tags = profile.tags || [];
                 navForumLink.classList.toggle('hidden', !(tags.includes('member') || tags.includes('founder') || tags.includes('admin')));
+            }
+            if (navAboutLink) {
+                navAboutLink.classList.remove('hidden');
             }
         }
         function closeHeaderAvatarMenu() {
