@@ -1040,7 +1040,7 @@ window.__freemanAdminInit = true;
     throw new Error('supabase-js failed to load from CDN');
   }
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const ALL_TAGS = ['non-member', 'member', 'founder', 'admin', 'vendor'];
+  const ALL_TAGS = ['non-member', 'member', 'founder', 'admin', 'vendor', 'promoter'];
   const GENRES = ['Disco', 'House', 'Techno', 'Electro', 'Jungle/Drum & Bass', 'Hip Hop'];
   // This profile can't be edited, re-tagged, deleted or blacklisted by other
   // admins. The database enforces the same rule; this just hides the controls.
