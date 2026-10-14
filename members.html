@@ -705,17 +705,17 @@ window.__freemanMembersInit = true;
       navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
     }
     if (navEventsLink) {
-      navEventsLink.classList.remove('hidden');
+      navEventsLink.classList.toggle('hidden', profile.membership_status !== 'active');
     }
     if (navForumLink) {
       const tags = profile.tags || [];
-      navForumLink.classList.toggle('hidden', !(tags.includes('member') || tags.includes('founder') || tags.includes('admin')));
+      navForumLink.classList.toggle('hidden', !(profile.membership_status === 'active' && (tags.includes('member') || tags.includes('founder') || tags.includes('admin'))));
     }
     if (navAboutLink) {
-      navAboutLink.classList.remove('hidden');
+      navAboutLink.classList.toggle('hidden', profile.membership_status !== 'active');
     }
     if (navMerchLink) {
-      navMerchLink.classList.remove('hidden');
+      navMerchLink.classList.toggle('hidden', profile.membership_status !== 'active');
     }
   }
   function resetHeaderAuthUI() {

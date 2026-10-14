@@ -458,17 +458,24 @@
                 window.location.href = 'members.html';
                 return;
             }
-            document.body.classList.remove('auth-pending');
+            // Active members only — anyone else goes back to their own profile.
+            let profile = null;
             try {
-                const { data: profile } = await supabase
+                const { data } = await supabase
                     .from('profiles')
                     .select('name, email, avatar_url, membership_status, tags')
                     .eq('id', session.user.id)
                     .single();
-                if (profile) applyHeaderAuthUI(profile);
+                profile = data;
             } catch (err) {
-                console.warn('Header auth check failed:', err);
+                console.warn('Profile check failed:', err);
             }
+            if (!profile || profile.membership_status !== 'active') {
+                window.location.href = 'members.html';
+                return;
+            }
+            document.body.classList.remove('auth-pending');
+            applyHeaderAuthUI(profile);
         })();
         // ---- Header avatar + Admin/Events/Forum nav links (shared pattern across all site pages) ----
         const headerAvatarWrap = document.getElementById('headerAvatarWrap');
@@ -498,14 +505,14 @@
                 navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
             }
             if (navEventsLink) {
-                navEventsLink.classList.remove('hidden');
+                navEventsLink.classList.toggle('hidden', profile.membership_status !== 'active');
             }
             if (navForumLink) {
                 const tags = profile.tags || [];
-                navForumLink.classList.toggle('hidden', !(tags.includes('member') || tags.includes('founder') || tags.includes('admin')));
+                navForumLink.classList.toggle('hidden', !(profile.membership_status === 'active' && (tags.includes('member') || tags.includes('founder') || tags.includes('admin'))));
             }
             if (navMerchLink) {
-                navMerchLink.classList.remove('hidden');
+                navMerchLink.classList.toggle('hidden', profile.membership_status !== 'active');
             }
         }
         function closeHeaderAvatarMenu() {

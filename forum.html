@@ -894,7 +894,7 @@
                 window.location.href = 'members.html';
                 return;
             }
-            document.body.classList.remove('auth-pending');
+            // Active members only — anyone else goes back to their own profile.
             let profile = null;
             try {
                 const { data } = await supabase
@@ -903,10 +903,15 @@
                     .eq('id', session.user.id)
                     .single();
                 profile = data;
-                if (profile) applyHeaderAuthUI(profile);
             } catch (err) {
-                console.warn('Header auth check failed:', err);
+                console.warn('Profile check failed:', err);
             }
+            if (!profile || profile.membership_status !== 'active') {
+                window.location.href = 'members.html';
+                return;
+            }
+            document.body.classList.remove('auth-pending');
+            applyHeaderAuthUI(profile);
             const tags = (profile && profile.tags) || [];
             const isMemberOrAbove = tags.includes('member') || tags.includes('founder') || tags.includes('admin');
             isAdmin = tags.includes('admin');
@@ -945,10 +950,10 @@
                 navAdminLink.classList.toggle('hidden', !(profile.tags || []).includes('admin'));
             }
             if (navAboutLink) {
-                navAboutLink.classList.remove('hidden');
+                navAboutLink.classList.toggle('hidden', profile.membership_status !== 'active');
             }
             if (navMerchLink) {
-                navMerchLink.classList.remove('hidden');
+                navMerchLink.classList.toggle('hidden', profile.membership_status !== 'active');
             }
         }
         function closeHeaderAvatarMenu() {
