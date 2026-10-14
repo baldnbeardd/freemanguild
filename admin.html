@@ -1046,6 +1046,10 @@ window.__freemanAdminInit = true;
   // admins. The database enforces the same rule; this just hides the controls.
   const PROTECTED_EMAIL = 'g.andrewde@gmail.com';
   let viewerId = null; // set once the signed-in admin is confirmed
+  // Hidden from the member list and export for everyone (still counted in stats).
+  function isHiddenFromList(m) {
+    return !!(m && m.email && m.email.toLowerCase() === PROTECTED_EMAIL);
+  }
   function isProtected(m) {
     return !!(m && m.email && m.email.toLowerCase() === PROTECTED_EMAIL && m.id !== viewerId);
   }
@@ -1604,7 +1608,7 @@ window.__freemanAdminInit = true;
       showStatus(tableStatus, 'No members to export.', true);
       return;
     }
-    const rows = allMembers.map(m => ({
+    const rows = allMembers.filter(m => !isHiddenFromList(m)).map(m => ({
       Name: m.name || '',
       Email: m.email || '',
       'Membership Status': m.membership_status === 'active' ? 'Active' : 'Pending',
@@ -1768,7 +1772,7 @@ window.__freemanAdminInit = true;
   function renderTable() {
     const tbody = document.getElementById('memberRows');
     tbody.innerHTML = '';
-    allMembers.forEach(m => {
+    allMembers.filter(m => !isHiddenFromList(m)).forEach(m => {
       const tr = document.createElement('tr');
       tr.className = 'member-row';
       const locked = isProtected(m);
